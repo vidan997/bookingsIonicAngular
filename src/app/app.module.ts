@@ -6,6 +6,8 @@ import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
+import { CreateBookingComponent } from './bookings/create-booking/create-booking.component';
+import { BookingsPage } from './bookings/bookings.page';
 
 @NgModule({
   declarations: [AppComponent],
