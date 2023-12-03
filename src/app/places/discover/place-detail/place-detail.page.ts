@@ -31,10 +31,10 @@ export class PlaceDetailPage implements OnInit {
       header: 'Choose an Action',
       buttons: [{
         text: 'Select Date',
-        handler: () => { 
+        handler: () => {
           this.openBookingModal();
         }
-      },{
+      }, {
         text: 'Cancel',
         role: 'destructive'
       }]
@@ -54,6 +54,12 @@ export class PlaceDetailPage implements OnInit {
     }).
       then(modalEl => {
         modalEl.present();
+        return modalEl.onDidDismiss();
+      }).then(resultData =>{
+        console.log(resultData.data, resultData.role);
+        if(resultData.role==='confirm'){
+          console.log('Booked!');
+        }
       });
   }
 }

@@ -10,7 +10,7 @@
 </ion-header>
 
 <ion-content class="ion-text-center">
-  <form>
+  <form (ngSubmit)="onBookPlace()" #f="ngForm">
     <ion-grid>
       <ion-row>
         <ion-col sizeSm="6" offsetSm="3">
@@ -48,8 +48,7 @@
               <ion-datetime-button datetime="datetime"></ion-datetime-button>
               <ion-modal [keepContentsMounted]="true">
                 <ng-template>
-                  <ion-datetime presentation="date" id="datetime" [min]="selectedPlace?.avaiableFrom?.toISOString()"
-                    [max]="selectedPlace?.availableTo?.toISOString()"  required name="date-from"
+                  <ion-datetime presentation="date" id="datetime" [ngModel]="startDate" [min]="startDate" [max]="endDate"  name="datetime"
                     ></ion-datetime>
                 </ng-template>
               </ion-modal>
@@ -61,9 +60,7 @@
               <ion-datetime-button datetime="datetimeto"></ion-datetime-button>
               <ion-modal [keepContentsMounted]="true">
                 <ng-template>
-                  <ion-datetime presentation="date" id="datetimeto" name="date-to"
-                    [min]="selectedPlace?.avaiableFrom?.toISOString()" [max]="selectedPlace?.availableTo?.toISOString()"
-                    required></ion-datetime>
+                  <ion-datetime presentation="date" id="datetimeto" name="datetimeto" [ngModel]="startDate" [min]=startDate [max]=endDate required></ion-datetime>
                 </ng-template>
               </ion-modal>
             </ion-item>
@@ -72,8 +69,8 @@
       </div>
       <ion-row>
         <ion-col sizeSm="6" offsetSm="3">
-          <p>{{selectedPlace?.description}}</p>
-          <ion-button color="primary" (click)="onBookPlace()" expand="block">Book</ion-button>
+          <p>{{selectedPlace.description}}</p>
+          <ion-button type="submit" color="primary" (click)="onBookPlace()" expand="block" [disabled]="!f.valid || !datesValid()">Book</ion-button>
         </ion-col>
       </ion-row>
     </ion-grid>

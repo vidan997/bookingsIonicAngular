@@ -8,7 +8,7 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 })
 export class NewOfferPage implements OnInit {
 
-  form: FormGroup =new FormGroup({});;
+  form: FormGroup =new FormGroup({});
 
   constructor() { }
 
