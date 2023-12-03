@@ -10,13 +10,72 @@
 </ion-header>
 
 <ion-content class="ion-text-center">
-  <ion-grid>
-    <ion-row>
-      <ion-col>
-        
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-  <p>{{selectedPlace?.description}}</p>
-  <ion-button color="primary" (click)="onBookPlace()">Book</ion-button>
+  <form>
+    <ion-grid>
+      <ion-row>
+        <ion-col sizeSm="6" offsetSm="3">
+          <ion-item>
+            <ion-label position="floating">First Name</ion-label>
+            <ion-input type="text" ngModel name="first-name" required=""></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col sizeSm="6" offsetSm="3">
+          <ion-item>
+            <ion-label position="floating">Last Name</ion-label>
+            <ion-input type="text" ngModel name="last-name" required=""></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col sizeSm="6" offsetSm="3">
+          <ion-item>
+            <ion-label position="floating">Number of Quest</ion-label>
+            <ion-select [ngModel]="'2'" name="quest-number">
+              <ion-select-option value="1">1</ion-select-option>
+              <ion-select-option value="2">2</ion-select-option>
+              <ion-select-option value="3">3</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <div>
+        <ion-row>
+          <ion-col sizeSm="3" offsetSm="3">
+            <ion-item>
+              <ion-label position="stacked">From</ion-label>
+              <ion-datetime-button datetime="datetime"></ion-datetime-button>
+              <ion-modal [keepContentsMounted]="true">
+                <ng-template>
+                  <ion-datetime presentation="date" id="datetime" [min]="selectedPlace?.avaiableFrom?.toISOString()"
+                    [max]="selectedPlace?.availableTo?.toISOString()"  required name="date-from"
+                    ></ion-datetime>
+                </ng-template>
+              </ion-modal>
+            </ion-item>
+          </ion-col>
+          <ion-col sizeSm="3">
+            <ion-item>
+              <ion-label position="stacked">To</ion-label>
+              <ion-datetime-button datetime="datetimeto"></ion-datetime-button>
+              <ion-modal [keepContentsMounted]="true">
+                <ng-template>
+                  <ion-datetime presentation="date" id="datetimeto" name="date-to"
+                    [min]="selectedPlace?.avaiableFrom?.toISOString()" [max]="selectedPlace?.availableTo?.toISOString()"
+                    required></ion-datetime>
+                </ng-template>
+              </ion-modal>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+      </div>
+      <ion-row>
+        <ion-col sizeSm="6" offsetSm="3">
+          <p>{{selectedPlace?.description}}</p>
+          <ion-button color="primary" (click)="onBookPlace()" expand="block">Book</ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
 </ion-content>

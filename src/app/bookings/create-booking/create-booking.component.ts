@@ -23,4 +23,6 @@ export class CreateBookingComponent  implements OnInit {
     this.modalCtrl.dismiss({message:'Message'},'confirm');
   }
 
+
+
 }

@@ -32,13 +32,9 @@ export class PlaceDetailPage implements OnInit {
       buttons: [{
         text: 'Select Date',
         handler: () => { 
-          this.openBookingModal('select');
+          this.openBookingModal();
         }
-      }, {
-        text: 'Rondom Date',
-        handler: () => { 
-          this.openBookingModal('rondom');}
-      }, {
+      },{
         text: 'Cancel',
         role: 'destructive'
       }]
@@ -48,8 +44,8 @@ export class PlaceDetailPage implements OnInit {
 
   }
 
-  openBookingModal(mode: 'select' | 'rondom') {
-    console.log(mode);
+  openBookingModal() {
+    console.log();
 
 
     this.modalController.create({
