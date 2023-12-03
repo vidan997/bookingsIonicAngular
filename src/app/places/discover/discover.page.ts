@@ -14,21 +14,28 @@ export class DiscoverPage implements OnInit {
 
   loadedPlaces: Place[];
 
-  
-  constructor(private placesService: PlacesService,private authService: AuthService,private router: Router) {
-    this.loadedPlaces = this.placesService.getPlaces;
-   }
 
-  ngOnInit() {
-    this.loadedPlaces = this.placesService.getPlaces;
+  constructor(private placesService: PlacesService, private authService: AuthService, private router: Router) {
+    this.loadedPlaces = this.placesService.places;
   }
 
-  onLogout(){
+  ngOnInit() {
+    this.loadedPlaces = this.placesService.places;
+  }
+
+  ionViewWillEnter() {
+    console.log('inside ionViewWillEnter');
+    this.loadedPlaces = this.placesService.places;
+    console.log('loadedPlaces: ', this.loadedPlaces);
+  }
+
+  onLogout() {
     this.authService.logout();
     this.router.navigateByUrl('/auth');
 
   }
-  onFilterUpdate(event:CustomEvent<SegmentChangeEventDetail>){
+  
+  onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
     console.log(event.detail);
   }
 }

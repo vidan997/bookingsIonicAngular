@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Place } from './place.model';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PlacesService {
-  private places: Place[] = [
+  private _places: Place[] = [
     new Place(
       'p1',
       'Vikendica na Zlatiboru',
@@ -13,7 +14,8 @@ export class PlacesService {
       'https://cf.bstatic.com/xdata/images/hotel/max1024x768/271649742.jpg?k=ab00ae5f8ce8cc3cc148a4a6cab701a5d7bb3141d6079f76aab077a21324d200&o=&hp=1',
       149.99,
       new Date('2019-01-01'),
-      new Date('2019-12-01')),
+      new Date('2019-12-01'),
+      'abc'),
     new Place(
       'p2',
       'Kopaonik',
@@ -21,7 +23,8 @@ export class PlacesService {
       'https://cf.bstatic.com/xdata/images/hotel/max1024x768/408555873.jpg?k=d2047f0d573371fc42bc560bffb9de042b19219dda5eedf577a2a0ed8888ac23&o=&hp=1',
       99.99,
       new Date('2019-01-01'),
-      new Date('2019-12-01')),
+      new Date('2019-12-01'),
+      'abc'),
     new Place(
       'p3',
       'Divcibare',
@@ -29,16 +32,39 @@ export class PlacesService {
       'https://www.divcibare.org.rs/wp-content/uploads/2021/11/vikendica-bajka-izdvojena.jpg',
       99.99,
       new Date('2019-01-01'),
-      new Date('2019-12-01'))
+      new Date('2019-12-01'),
+      'abc')
   ];
 
-  get getPlaces() {
-    return [...this.places];
+  get places() {
+    return [...this._places];
 
   }
-  getPlace(id: string | null){
-    return {...this.places.find(p=>p.id==id)}
+  getPlace(id: string | null) {
+    return { ...this._places.find(p => p.id == id) }
   }
 
-  constructor() { }
+  addPlace(
+    title: string, 
+    description: string, 
+    price: number, 
+    dateFrom: Date, 
+    dateTo: Date) {
+
+    const newPlace = new Place(
+      Math.random().toString(),
+      title,
+      description,
+      'https://cf.bstatic.com/xdata/images/hotel/max1024x768/271649742.jpg?k=ab00ae5f8ce8cc3cc148a4a6cab701a5d7bb3141d6079f76aab077a21324d200&o=&hp=1',
+      price,
+      dateFrom,
+      dateTo,
+      this.authService.userId
+    );
+    this._places.push(newPlace);
+    console.log(newPlace);
+    console.log(this.places);
+  }
+
+  constructor(private authService: AuthService) { }
 }

@@ -12,15 +12,19 @@ export class OffersPage implements OnInit {
 
   offers: Place[];
 
-  constructor(private placesService : PlacesService,private menuCtrl: MenuController) { 
-    this.offers = placesService.getPlaces;
+  constructor(private placesService: PlacesService, private menuCtrl: MenuController) {
+    this.offers = placesService.places;
   }
 
   ngOnInit() {
-    this.offers = this.placesService.getPlaces;
+    this.offers = this.placesService.places;
   }
 
-  onEdit(id: string | undefined){
+  ionViewWillEnter() {
+    this.offers = this.placesService.places;
+  }
+
+  onEdit(id: string | undefined) {
     console.log('Editing');
   }
 }
