@@ -1,28 +1,34 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PlacesService } from '../places.service';
 import { Place } from '../place.model';
 import { MenuController } from '@ionic/angular';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-offers',
   templateUrl: './offers.page.html',
   styleUrls: ['./offers.page.scss'],
 })
-export class OffersPage implements OnInit {
+export class OffersPage implements OnInit,OnDestroy {
 
-  offers: Place[];
+  offers!: Place[];
+  private placesSub!: Subscription;
 
   constructor(private placesService: PlacesService, private menuCtrl: MenuController) {
-    this.offers = placesService.places;
+
+  }
+  ngOnDestroy(): void {
+    if(this.placesSub){
+      this.placesSub.unsubscribe();
+    }
   }
 
   ngOnInit() {
-    this.offers = this.placesService.places;
+    this.placesSub = this.placesService.places.subscribe(places =>{
+      this.offers=places;
+    });
   }
 
-  ionViewWillEnter() {
-    this.offers = this.placesService.places;
-  }
 
   onEdit(id: string | undefined) {
     console.log('Editing');

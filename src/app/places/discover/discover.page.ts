@@ -1,32 +1,34 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PlacesService } from '../places.service';
 import { Place } from '../place.model';
 import { AuthService } from 'src/app/auth/auth.service';
 import { Router } from '@angular/router';
 import { SegmentChangeEventDetail } from '@ionic/angular';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-discover',
   templateUrl: './discover.page.html',
   styleUrls: ['./discover.page.scss'],
 })
-export class DiscoverPage implements OnInit {
+export class DiscoverPage implements OnInit, OnDestroy{
 
-  loadedPlaces: Place[];
+  loadedPlaces!: Place[];
+  private placesSub!: Subscription;
 
 
   constructor(private placesService: PlacesService, private authService: AuthService, private router: Router) {
-    this.loadedPlaces = this.placesService.places;
+  }
+  ngOnDestroy(): void {
+    if(this.placesSub){
+      this.placesSub.unsubscribe();
+    }
   }
 
   ngOnInit() {
-    this.loadedPlaces = this.placesService.places;
-  }
-
-  ionViewWillEnter() {
-    console.log('inside ionViewWillEnter');
-    this.loadedPlaces = this.placesService.places;
-    console.log('loadedPlaces: ', this.loadedPlaces);
+    this.placesSub = this.placesService.places.subscribe(places => {
+      this.loadedPlaces = places;
+    });
   }
 
   onLogout() {
@@ -34,7 +36,7 @@ export class DiscoverPage implements OnInit {
     this.router.navigateByUrl('/auth');
 
   }
-  
+
   onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
     console.log(event.detail);
   }

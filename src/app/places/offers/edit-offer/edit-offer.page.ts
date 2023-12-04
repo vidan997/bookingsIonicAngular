@@ -1,44 +1,53 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PlacesService } from '../../places.service';
 import { ActivatedRoute } from '@angular/router';
 import { Place } from '../../place.model';
 import { NavController } from '@ionic/angular';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-edit-offer',
   templateUrl: './edit-offer.page.html',
   styleUrls: ['./edit-offer.page.scss'],
 })
-export class EditOfferPage implements OnInit {
+export class EditOfferPage implements OnInit, OnDestroy {
 
-  place: Place | undefined ;
-  form: FormGroup = new FormGroup({});
+  place!: Place;
+  form!: FormGroup;
+  private placesSub!: Subscription;
 
-  constructor(private route: ActivatedRoute,private placesService: PlacesService,private navCtrl: NavController) { }
+  constructor(private route: ActivatedRoute, private placesService: PlacesService, private navCtrl: NavController) { }
+  ngOnDestroy(): void {
+    if (this.placesSub) {
+      this.placesSub.unsubscribe();
+    }
+  }
 
   ngOnInit() {
-    this.route.paramMap.subscribe(paramMap =>{
-      if(!paramMap.has('placeId')){
+    this.route.paramMap.subscribe(paramMap => {
+      if (!paramMap.has('placeId')) {
         this.navCtrl.navigateBack('/places/tabs/offers');
         return;
       }
-      this.place = this.placesService.getPlace(paramMap.get('placeId'));
-      this.form = new FormGroup({
-        title: new FormControl(this.place.title, {
-          updateOn: 'blur',
-          validators: [Validators.required]
-        }),
-        description: new FormControl(this.place.description, {
-          updateOn: 'blur',
-          validators: [Validators.required, Validators.maxLength(100)]
-        })
+      this.placesSub = this.placesService.getPlace(paramMap.get('placeId')).subscribe(place => {
+        this.place = place;
+        this.form = new FormGroup({
+          title: new FormControl(this.place.title, {
+            updateOn: 'blur',
+            validators: [Validators.required]
+          }),
+          description: new FormControl(this.place.description, {
+            updateOn: 'blur',
+            validators: [Validators.required, Validators.maxLength(100)]
+          })
+        });
       });
     });
   }
 
-  onUpdateOffer(){
-    if(!this.form.valid){
+  onUpdateOffer() {
+    if (!this.form.valid) {
       return;
     }
     console.log(this.form)

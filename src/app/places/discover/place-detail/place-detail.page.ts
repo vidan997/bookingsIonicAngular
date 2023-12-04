@@ -1,20 +1,27 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ActionSheetController, ModalController, NavController } from '@ionic/angular';
 import { PlacesService } from '../../places.service';
 import { Place } from '../../place.model';
 import { CreateBookingComponent } from 'src/app/bookings/create-booking/create-booking.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-place-detail',
   templateUrl: './place-detail.page.html',
   styleUrls: ['./place-detail.page.scss'],
 })
-export class PlaceDetailPage implements OnInit {
+export class PlaceDetailPage implements OnInit, OnDestroy {
 
   place: Place | undefined;
+  private placesSub!: Subscription;
 
   constructor(private navCtrl: NavController, private route: ActivatedRoute, private placesService: PlacesService, private modalController: ModalController, private actionSheetCtrl: ActionSheetController) { }
+  ngOnDestroy(): void {
+    if (this.placesSub) {
+      this.placesSub.unsubscribe();
+    }
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(paramMap => {
@@ -22,7 +29,9 @@ export class PlaceDetailPage implements OnInit {
         this.navCtrl.navigateBack('/places/tabs/discover');
         return;
       }
-      this.place = this.placesService.getPlace(paramMap.get('placeId'));
+      this.placesSub = this.placesService.getPlace(paramMap.get('placeId')).subscribe(place => {
+        this.place = place;
+      });
     });
   }
 
@@ -55,9 +64,9 @@ export class PlaceDetailPage implements OnInit {
       then(modalEl => {
         modalEl.present();
         return modalEl.onDidDismiss();
-      }).then(resultData =>{
+      }).then(resultData => {
         console.log(resultData.data, resultData.role);
-        if(resultData.role==='confirm'){
+        if (resultData.role === 'confirm') {
           console.log('Booked!');
         }
       });
