@@ -11,16 +11,17 @@ import { Subscription } from 'rxjs';
   templateUrl: './discover.page.html',
   styleUrls: ['./discover.page.scss'],
 })
-export class DiscoverPage implements OnInit, OnDestroy{
+export class DiscoverPage implements OnInit, OnDestroy {
 
   loadedPlaces!: Place[];
+  relevantPlaces!: Place[];
   private placesSub!: Subscription;
 
 
   constructor(private placesService: PlacesService, private authService: AuthService, private router: Router) {
   }
   ngOnDestroy(): void {
-    if(this.placesSub){
+    if (this.placesSub) {
       this.placesSub.unsubscribe();
     }
   }
@@ -28,6 +29,7 @@ export class DiscoverPage implements OnInit, OnDestroy{
   ngOnInit() {
     this.placesSub = this.placesService.places.subscribe(places => {
       this.loadedPlaces = places;
+      this.relevantPlaces = this.loadedPlaces;
     });
   }
 
@@ -38,6 +40,14 @@ export class DiscoverPage implements OnInit, OnDestroy{
   }
 
   onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
+
     console.log(event.detail);
+    if (event.detail.value === 'all') {
+      this.relevantPlaces = this.loadedPlaces;
+    } else {
+      this.relevantPlaces = this.loadedPlaces.filter(
+        place => place.userId !== this.authService.userId && place.availableTo! > new Date
+        );
+    }
   }
 }

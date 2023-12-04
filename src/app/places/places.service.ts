@@ -33,8 +33,8 @@ export class PlacesService {
       'https://www.divcibare.org.rs/wp-content/uploads/2021/11/vikendica-bajka-izdvojena.jpg',
       99.99,
       new Date('2019-01-01'),
-      new Date('2019-12-01'),
-      'abc')
+      new Date('2025-12-01'),
+      'xyz')
   ]);
 
   get places() {
