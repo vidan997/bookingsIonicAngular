@@ -68,10 +68,31 @@ export class PlacesService {
     return this.places.pipe(
       take(1), delay(1000), tap(places => {
         this._places.next(places.concat(newPlace));
-    }));
+      }));
   }
 
-  
+  updatePlace(placeId: string, title: string, description: string) {
+    return this.places.pipe(
+      take(1),
+      delay(1000),
+      tap(places => {
+        const updatedPlaceIndex = places.findIndex(pl => pl.id === placeId);
+        const updatedPlaces = [...places];
+        const old = updatedPlaces[updatedPlaceIndex];
+        updatedPlaces[updatedPlaceIndex] = new Place(
+          old.id,
+          title,
+          description,
+          old.imageUrl,
+          old.price,
+          old.avaiableFrom,
+          old.availableTo,
+          old.userId);
+        this._places.next(updatedPlaces);
+
+      }));
+
+  }
 
   constructor(private authService: AuthService) { }
 }
