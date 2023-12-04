@@ -3,12 +3,28 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/places/tabs/discover"> </ion-back-button>
     </ion-buttons>
-    <ion-title>{{place?.title}}</ion-title>
+    <ion-title>{{place.title}}</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
 
-  <ion-button color="primary" (click)="onBookPlace()">Book</ion-button>
+  <ion-grid>
+    <ion-row>
+      <ion-col sizeSm="6" offsetSm="3">
+        <ion-img [src]="place.imageUrl"></ion-img>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col sizeSm="6" offsetSm="3" class="ion-text-center">
+        <p>{{place.description}}</p>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col sizeSm="6" offsetSm="3">
+        <ion-button color="primary" expand="block" (click)="onBookPlace()">Book</ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 
 </ion-content>

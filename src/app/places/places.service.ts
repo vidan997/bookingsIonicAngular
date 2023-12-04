@@ -39,7 +39,6 @@ export class PlacesService {
 
   get places() {
     return this._places.asObservable();
-
   }
   getPlace(id: string | null) {
     return this.places.pipe(take(1), map(places => {
