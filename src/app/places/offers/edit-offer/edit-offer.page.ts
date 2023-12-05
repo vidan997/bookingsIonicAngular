@@ -14,8 +14,10 @@ import { Subscription } from 'rxjs';
 export class EditOfferPage implements OnInit, OnDestroy {
 
   place!: Place;
+  placeId!: string;
   form!: FormGroup;
   private placesSub!: Subscription;
+  isLoading = false;
 
   constructor(private route: ActivatedRoute, private placesService: PlacesService, private navCtrl: NavController, private router: Router, private loadingCtrl: LoadingController) { }
   ngOnDestroy(): void {
@@ -30,7 +32,9 @@ export class EditOfferPage implements OnInit, OnDestroy {
         this.navCtrl.navigateBack('/places/tabs/offers');
         return;
       }
-      this.placesSub = this.placesService.getPlace(paramMap.get('placeId')).subscribe(place => {
+      this.placeId = paramMap.get('placeId')!;
+      this.isLoading = true;
+      this.placesSub = this.placesService.getPlace(paramMap.get('placeId')!).subscribe(place => {
         this.place = place;
         this.form = new FormGroup({
           title: new FormControl(this.place.title, {
@@ -42,6 +46,7 @@ export class EditOfferPage implements OnInit, OnDestroy {
             validators: [Validators.required, Validators.maxLength(100)]
           })
         });
+        this.isLoading=false;
       });
     });
   }
@@ -56,8 +61,8 @@ export class EditOfferPage implements OnInit, OnDestroy {
     }).then(loadingEl => {
       loadingEl.present();
       this.placesService.updatePlace(
-        this.place.id!, 
-        this.form.value.title, 
+        this.place.id!,
+        this.form.value.title,
         this.form.value.description).
         subscribe(() => {
           loadingEl.dismiss();

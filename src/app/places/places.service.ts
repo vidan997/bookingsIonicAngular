@@ -55,10 +55,22 @@ export class PlacesService {
     return this._places.asObservable();
   }
 
-  getPlace(id: string | null) {
-    return this.places.pipe(take(1), map(places => {
-      return { ...places.find(p => p.id == id) }
-    }));
+  getPlace(placeId: string) {
+    return this.htttp.
+      get<PlaceData>(`https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/offered-places/${placeId}.json`).
+      pipe(
+        map(placeData => {
+          return new Place(
+            placeId,
+            placeData.title,
+            placeData.description,
+            placeData.imageUrl,
+            placeData.price,
+            new Date(placeData.avaiableFrom),
+            new Date(placeData.availableTo),
+            placeData.userId);
+        })
+      );
   }
 
   fetchPlaces() {
