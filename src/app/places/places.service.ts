@@ -1,7 +1,18 @@
 import { Injectable } from '@angular/core';
 import { Place } from './place.model';
 import { AuthService } from '../auth/auth.service';
-import { BehaviorSubject, delay, map, take, tap } from 'rxjs';
+import { BehaviorSubject, delay, generate, map, switchMap, take, tap } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+
+interface PlaceData {
+  avaiableFrom: string;
+  availableTo: string;
+  description: string;
+  imageUrl: string;
+  price: number;
+  title: string;
+  userId: string;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -37,14 +48,43 @@ export class PlacesService {
       'xyz')
   ]);
 
+
+  constructor(private authService: AuthService, private htttp: HttpClient) { }
+
   get places() {
     return this._places.asObservable();
   }
+
   getPlace(id: string | null) {
     return this.places.pipe(take(1), map(places => {
       return { ...places.find(p => p.id == id) }
     }));
+  }
 
+  fetchPlaces() {
+    return this.htttp
+      .get<{ [key: string]: PlaceData }>('https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/offered-places.json')
+      .pipe(map(resData => {
+        const places = [];
+        for (const key in resData) {
+          if (resData.hasOwnProperty(key)) {
+            places.push(new Place(
+              key,
+              resData[key].title,
+              resData[key].description,
+              resData[key].imageUrl,
+              resData[key].price,
+              new Date(resData[key].avaiableFrom),
+              new Date(resData[key].availableTo),
+              resData[key].userId));
+          }
+        }
+        return places;
+      }),
+        tap(places => {
+          this._places.next(places);
+        })
+      );
   }
 
   addPlace(
@@ -54,6 +94,7 @@ export class PlacesService {
     dateFrom: Date,
     dateTo: Date) {
 
+    let generatedId: string;
     const newPlace = new Place(
       Math.random().toString(),
       title,
@@ -64,10 +105,19 @@ export class PlacesService {
       dateTo,
       this.authService.userId
     );
-    return this.places.pipe(
-      take(1), delay(1000), tap(places => {
-        this._places.next(places.concat(newPlace));
-      }));
+    return this.htttp
+      .post<{ name: string }>('https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/offered-places.json', { ...newPlace, id: null })
+      .pipe(switchMap(resData => {
+        generatedId = resData.name;
+        return this.places;
+      }),
+        take(1),
+        tap(places => {
+          newPlace.id = generatedId;
+          this._places.next(places.concat(newPlace));
+          console.log(generatedId);
+        })
+      );
   }
 
   updatePlace(placeId: string, title: string, description: string) {
@@ -93,5 +143,4 @@ export class PlacesService {
 
   }
 
-  constructor(private authService: AuthService) { }
 }
