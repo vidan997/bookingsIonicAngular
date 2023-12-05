@@ -16,6 +16,7 @@ export class DiscoverPage implements OnInit, OnDestroy {
   loadedPlaces!: Place[];
   relevantPlaces!: Place[];
   private placesSub!: Subscription;
+  isLoading = false;
 
 
   constructor(private placesService: PlacesService, private authService: AuthService, private router: Router) {
@@ -33,6 +34,14 @@ export class DiscoverPage implements OnInit, OnDestroy {
     });
   }
 
+  ionViewWillEnter() {
+    this.isLoading=true;
+
+    this.placesService.fetchPlaces().subscribe(()=>{
+      this.isLoading=false;
+    });
+  }
+
   onLogout() {
     this.authService.logout();
     this.router.navigateByUrl('/auth');
@@ -47,7 +56,7 @@ export class DiscoverPage implements OnInit, OnDestroy {
     } else {
       this.relevantPlaces = this.loadedPlaces.filter(
         place => place.userId !== this.authService.userId && place.availableTo! > new Date
-        );
+      );
     }
   }
 }
