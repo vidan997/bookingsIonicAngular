@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Place } from './place.model';
 import { AuthService } from '../auth/auth.service';
-import { BehaviorSubject, delay, generate, map, switchMap, take, tap } from 'rxjs';
+import { BehaviorSubject, delay, generate, map, of, switchMap, take, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
 interface PlaceData {
@@ -135,7 +135,14 @@ export class PlacesService {
   updatePlace(placeId: string, title: string, description: string) {
     let updatedPlaces: Place[];
     return this.places.pipe(
-      take(1), switchMap(places => {
+      take(1),
+      switchMap(places => {
+        if (!places || places.length < 0) {
+          return this.fetchPlaces();
+        } else {
+          return of(places);
+        }
+      }), switchMap(places => {
         const updatedPlaceIndex = places.findIndex(pl => pl.id === placeId);
         updatedPlaces = [...places];
         const old = updatedPlaces[updatedPlaceIndex];
@@ -151,7 +158,8 @@ export class PlacesService {
         return this.htttp.put(
           `https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/offered-places/${placeId}.json`,
           { ...updatedPlaces[updatedPlaceIndex], id: null });
-      }), tap(resData => {
+      })
+      , tap(resData => {
         this._places.next(updatedPlaces);
       }));
   }
