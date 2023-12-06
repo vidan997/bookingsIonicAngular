@@ -65,6 +65,11 @@
           </ion-col>
         </ion-row>
       </div>
+      <ion-row>
+        <ion-col sizeSm="6" offsetSm="3">
+          <app-image-picker (imagePick)="onImagePicked($event)"></app-image-picker>
+        </ion-col>
+      </ion-row>
     </ion-grid>
   </form>
 </ion-content>

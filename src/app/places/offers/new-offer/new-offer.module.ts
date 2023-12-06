@@ -7,14 +7,16 @@ import { IonicModule } from '@ionic/angular';
 import { NewOfferPageRoutingModule } from './new-offer-routing.module';
 
 import { NewOfferPage } from './new-offer.page';
+import { ImagePickerComponent } from './image-picker/image-picker.component';
 
 @NgModule({
   imports: [
     CommonModule,
     ReactiveFormsModule,
     IonicModule,
-    NewOfferPageRoutingModule
+    NewOfferPageRoutingModule,
+
   ],
-  declarations: [NewOfferPage]
+  declarations: [NewOfferPage, ImagePickerComponent]
 })
-export class NewOfferPageModule {}
+export class NewOfferPageModule { }

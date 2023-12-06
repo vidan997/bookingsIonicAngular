@@ -61,4 +61,8 @@ export class NewOfferPage implements OnInit {
     });
   }
 
+  onImagePicked(imageData: string){
+
+  }
+
 }
