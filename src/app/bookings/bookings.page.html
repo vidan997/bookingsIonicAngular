@@ -10,10 +10,16 @@
 <ion-content>
   <ion-grid>
     <ion-row>
-      <ion-col class="ion-text-center" sizeMd="6" offsetMd="3" *ngIf="!loadedBookings || loadedBookings.length <= 0">
+
+      <ion-spinner class="ion-text-center" *ngIf="isLoading"></ion-spinner>
+
+      <ion-col class="ion-text-center" sizeMd="6" offsetMd="3"
+        *ngIf="!isLoading && (!loadedBookings || loadedBookings.length <= 0)">
         <p>No bookings found!</p>
       </ion-col>
-      <ion-col sizeMd="6" offsetMd="3" *ngIf="loadedBookings && loadedBookings.length > 0">
+
+
+      <ion-col sizeMd="6" offsetMd="3" *ngIf="!isLoading && loadedBookings && loadedBookings.length > 0">
         <ion-list>
           <ion-item-sliding *ngFor="let booking of loadedBookings">
             <ion-item>
