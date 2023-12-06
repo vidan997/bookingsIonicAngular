@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PlacesService } from '../../places.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Place } from '../../place.model';
-import { LoadingController, NavController } from '@ionic/angular';
+import { AlertController, LoadingController, NavController } from '@ionic/angular';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
@@ -19,7 +19,7 @@ export class EditOfferPage implements OnInit, OnDestroy {
   private placesSub!: Subscription;
   isLoading = false;
 
-  constructor(private route: ActivatedRoute, private placesService: PlacesService, private navCtrl: NavController, private router: Router, private loadingCtrl: LoadingController) { }
+  constructor(private route: ActivatedRoute, private placesService: PlacesService, private navCtrl: NavController, private router: Router, private loadingCtrl: LoadingController, private alertCtrl: AlertController) { }
   ngOnDestroy(): void {
     if (this.placesSub) {
       this.placesSub.unsubscribe();
@@ -46,7 +46,20 @@ export class EditOfferPage implements OnInit, OnDestroy {
             validators: [Validators.required, Validators.maxLength(100)]
           })
         });
-        this.isLoading=false;
+        this.isLoading = false;
+      }, error => {
+        this.alertCtrl.create({
+          header: 'An error ocuured!',
+          message: 'Place could not be fetched. Please try again later.',
+          buttons: [{
+            text: 'Okay', handler: () => {
+              this.router.navigate(['places/tabs/offers']);
+            }
+          }]
+        })
+        .then(alertEl=>{
+          alertEl.present();
+        });
       });
     });
   }
