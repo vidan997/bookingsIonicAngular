@@ -8,7 +8,7 @@ import { Component, ElementRef, EventEmitter, OnInit, Output, ViewChild } from '
 export class ImagePickerComponent implements OnInit {
 
   @ViewChild('filePicker') filePicker!: ElementRef<HTMLInputElement>;
-  @Output() imagePick = new EventEmitter<string>();
+  @Output() imagePick = new EventEmitter<string | File>();
   selectedImage!: string;
 
   constructor() { }
@@ -31,6 +31,7 @@ export class ImagePickerComponent implements OnInit {
     fr.onload = () => {
       const dataUrl = fr.result?.toString();
       this.selectedImage = dataUrl!;
+      this.imagePick.emit(pickedFile);
     }
     fr.readAsDataURL(pickedFile);
 
