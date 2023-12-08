@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
-import { LoadingController } from '@ionic/angular';
+import { AlertController, LoadingController } from '@ionic/angular';
 import { NgForm } from '@angular/forms';
 
 @Component({
@@ -12,45 +12,61 @@ import { NgForm } from '@angular/forms';
 export class AuthPage implements OnInit {
 
   isLoading = false;
-  isLogin= true;
+  isLogin = true;
 
-  constructor(private authService: AuthService, private router: Router, private loadingCtrl: LoadingController) { }
+  constructor(private authService: AuthService, private router: Router, private loadingCtrl: LoadingController, private alertCtrl: AlertController) { }
 
   ngOnInit() {
   }
 
-  onLogin() {
+  authenticate(email: string, password: string) {
     this.authService.login();
     this.isLoading = true;
     this.loadingCtrl.create({ keyboardClose: true, message: 'Logging in...' })
       .then(loadingEl => {
         loadingEl.present();
-        setTimeout(() => {
+        this.authService.signup(email, password).subscribe(resData => {
+          console.log(resData);
           this.isLoading = false;
           loadingEl.dismiss();
           this.router.navigateByUrl('/places/tabs/discover');
-        }, 1500);
+        }, errRes => {
+          loadingEl.dismiss();
+          const code = errRes.error.error.message;
+          let message = 'Could not sign you up,please try again.'
+          if (code === 'EMAIL_EXISTS') {
+            message='This email adress already exists!';
+          }
+          this.showAlert(message);
+        });
       });
-
   }
 
-  onSubmit(form: NgForm){
+  private showAlert(message: string) {
+    this.alertCtrl.create(
+      {
+        header: 'Authentication failed',
+        message: message,
+        buttons: ['Okay']
+      }
+    ).then(alertEl => {
+      alertEl.present();
+    })
+  }
+
+  onSubmit(form: NgForm) {
     console.log(form);
-    if(!form.valid){
+    if (!form.valid) {
       return;
     }
     const email = form.value.email;
     const password = form.value.password;
 
-    if(this.isLogin){
-
-    }else{
-
-    }
+    this.authenticate(email, password);
 
   }
 
-  onSwitchAuthMode(){
+  onSwitchAuthMode() {
     this.isLogin = !this.isLogin;
 
   }

@@ -23,10 +23,11 @@
       </ion-row>
       <ion-row>
         <ion-col sizeMd="6" offsetMd="3">
-          <ion-button type="button" color="primary" fill="clear" expand="block" (click)="onSwitchAuthMode()">Switch to {{ isLogin ? 'SignUp' : 'Login' }}</ion-button>
+          <ion-button type="button" color="primary" fill="clear" expand="block" (click)="onSwitchAuthMode()">Switch to
+            {{ isLogin ? 'SignUp' : 'Login' }}</ion-button>
           <div class="ion-text-center">
-            <ion-button type="submit" color="primary" (click)="onLogin()" *ngIf="!isLoading" expand="block">
-              Login
+            <ion-button type="submit" color="primary" expand="block" [disabled]="!f.valid">
+              {{isLogin ? 'Login':'Signup'}}
             </ion-button>
           </div>
         </ion-col>
