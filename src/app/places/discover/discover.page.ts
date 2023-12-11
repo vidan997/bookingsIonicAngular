@@ -35,10 +35,10 @@ export class DiscoverPage implements OnInit, OnDestroy {
   }
 
   ionViewWillEnter() {
-    this.isLoading=true;
+    this.isLoading = true;
 
-    this.placesService.fetchPlaces().subscribe(()=>{
-      this.isLoading=false;
+    this.placesService.fetchPlaces().subscribe(() => {
+      this.isLoading = false;
     });
   }
 
@@ -49,14 +49,16 @@ export class DiscoverPage implements OnInit, OnDestroy {
   }
 
   onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
+    this.authService.userId.subscribe(userId => {
+      console.log(event.detail);
+      if (event.detail.value === 'all') {
+        this.relevantPlaces = this.loadedPlaces;
+      } else {
+        this.relevantPlaces = this.loadedPlaces.filter(
+          place => place.userId !== userId && place.availableTo! > new Date
+        );
+      }
+    });
 
-    console.log(event.detail);
-    if (event.detail.value === 'all') {
-      this.relevantPlaces = this.loadedPlaces;
-    } else {
-      this.relevantPlaces = this.loadedPlaces.filter(
-        place => place.userId !== this.authService.userId && place.availableTo! > new Date
-      );
-    }
   }
 }

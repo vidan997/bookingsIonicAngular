@@ -107,29 +107,33 @@ export class PlacesService {
     dateTo: Date) {
 
     let generatedId: string;
-    const newPlace = new Place(
-      Math.random().toString(),
-      title,
-      description,
-      'https://cf.bstatic.com/xdata/images/hotel/max1024x768/271649742.jpg?k=ab00ae5f8ce8cc3cc148a4a6cab701a5d7bb3141d6079f76aab077a21324d200&o=&hp=1',
-      price,
-      dateFrom,
-      dateTo,
-      this.authService.userId
-    );
-    return this.htttp
-      .post<{ name: string }>('https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/offered-places.json', { ...newPlace, id: null })
-      .pipe(switchMap(resData => {
-        generatedId = resData.name;
-        return this.places;
-      }),
-        take(1),
-        tap(places => {
-          newPlace.id = generatedId;
-          this._places.next(places.concat(newPlace));
-          console.log(generatedId);
-        })
+    let newPlace: Place;
+    return this.authService.userId.pipe(take(1), switchMap(userId => {
+      if (!userId) {
+        throw new Error('User not found!');
+      }
+      newPlace = new Place(
+        Math.random().toString(),
+        title,
+        description,
+        'https://cf.bstatic.com/xdata/images/hotel/max1024x768/271649742.jpg?k=ab00ae5f8ce8cc3cc148a4a6cab701a5d7bb3141d6079f76aab077a21324d200&o=&hp=1',
+        price,
+        dateFrom,
+        dateTo,
+        userId
       );
+      return this.htttp.post<{ name: string }>('https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/offered-places.json', { ...newPlace, id: null });
+    }), switchMap(resData => {
+      generatedId = resData.name;
+      return this.places;
+    }),
+      take(1),
+      tap(places => {
+        newPlace.id = generatedId;
+        this._places.next(places.concat(newPlace));
+        console.log(generatedId);
+      })
+    );
   }
 
   updatePlace(placeId: string, title: string, description: string) {

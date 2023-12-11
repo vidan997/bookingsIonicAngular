@@ -31,20 +31,26 @@ export class BookingService {
 
   addBooking(placeId: string, placeTitle: string, placeImage: string, firstname: string, lastName: string, guestNumber: number, dateFrom: Date, dateTo: Date) {
     let generatedId: string;
-    const newBooking = new Booking(
-      Math.random().toString(),
-      placeId,
-      this.authService.userId,
-      placeTitle,
-      placeImage,
-      firstname,
-      lastName, guestNumber,
-      dateFrom,
-      dateTo
-    );
-    return this.http.post<{ name: string }>('https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/bookings.json',
-      { ...newBooking, id: null }
-    ).pipe(switchMap(resdData => {
+    let newBooking: Booking;
+    return this.authService.userId.pipe(take(1), switchMap(userId => {
+      if (!userId) {
+        throw new Error('No user id found!');
+      }
+      newBooking = new Booking(
+        Math.random().toString(),
+        placeId,
+        userId,
+        placeTitle,
+        placeImage,
+        firstname,
+        lastName, guestNumber,
+        dateFrom,
+        dateTo
+      );
+      return this.http.post<{ name: string }>('https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/bookings.json',
+        { ...newBooking, id: null }
+      );
+    }), switchMap(resdData => {
       generatedId = resdData.name;
       return this.bookings;
     }),

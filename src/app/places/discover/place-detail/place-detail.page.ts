@@ -4,7 +4,7 @@ import { ActionSheetController, AlertController, LoadingController, ModalControl
 import { PlacesService } from '../../places.service';
 import { Place } from '../../place.model';
 import { CreateBookingComponent } from 'src/app/bookings/create-booking/create-booking.component';
-import { Subscription } from 'rxjs';
+import { Subscription, switchMap } from 'rxjs';
 import { BookingService } from 'src/app/bookings/booking.service';
 import { AuthService } from 'src/app/auth/auth.service';
 
@@ -17,7 +17,7 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
 
   place!: Place;
   private placesSub!: Subscription;
-  isLoading =false;
+  isLoading = false;
   isBookable = false;
 
   constructor(private navCtrl: NavController,
@@ -43,27 +43,32 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
         this.navCtrl.navigateBack('/places/tabs/discover');
         return;
       }
-      this.isLoading=true;
-      this.placesSub = this.placesService.
-        getPlace(paramMap.get('placeId')!).
-        subscribe(place => {
-          this.place = place;
-          this.isBookable = (place.userId !== this.authService.userId && place.availableTo! > new Date());
-          this.isLoading=false;
-        },error => {
-          this.alertCtrl.create({
-            header: 'An error ocuured!',
-            message: 'Place could not be fetched. Please try again later.',
-            buttons: [{
-              text: 'Okay', handler: () => {
-                this.router.navigate(['places/tabs/discover']);
-              }
-            }]
-          })
-          .then(alertEl=>{
+      this.isLoading = true;
+      let fetchedUserId: string;
+      this.authService.userId.pipe(switchMap(userId => {
+        if (!userId) {
+          throw new Error('Found no user!');
+        }
+        fetchedUserId = userId;
+        return this.placesService.getPlace(paramMap.get('placeId')!)
+      })).subscribe(place => {
+        this.place = place;
+        this.isBookable = (place.userId !== fetchedUserId && place.availableTo! > new Date());
+        this.isLoading = false;
+      }, error => {
+        this.alertCtrl.create({
+          header: 'An error ocuured!',
+          message: 'Place could not be fetched. Please try again later.',
+          buttons: [{
+            text: 'Okay', handler: () => {
+              this.router.navigate(['places/tabs/discover']);
+            }
+          }]
+        })
+          .then(alertEl => {
             alertEl.present();
           });
-        });
+      });
     });
   }
 
