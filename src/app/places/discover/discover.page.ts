@@ -4,7 +4,7 @@ import { Place } from '../place.model';
 import { AuthService } from 'src/app/auth/auth.service';
 import { Router } from '@angular/router';
 import { SegmentChangeEventDetail } from '@ionic/angular';
-import { Subscription } from 'rxjs';
+import { Subscription, take } from 'rxjs';
 
 @Component({
   selector: 'app-discover',
@@ -49,7 +49,7 @@ export class DiscoverPage implements OnInit, OnDestroy {
   }
 
   onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
-    this.authService.userId.subscribe(userId => {
+    this.authService.userId.pipe(take(1)).subscribe(userId => {
       console.log(event.detail);
       if (event.detail.value === 'all') {
         this.relevantPlaces = this.loadedPlaces;
