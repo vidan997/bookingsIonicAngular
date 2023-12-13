@@ -43,8 +43,8 @@ export class DiscoverPage implements OnInit, OnDestroy {
   }
 
   onLogout() {
-    this.authService.logout();
     this.router.navigateByUrl('/auth');
+    this.authService.logout();
 
   }
 
