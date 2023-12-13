@@ -32,7 +32,7 @@ export class OffersPage implements OnInit,OnDestroy {
 
   ionViewWillEnter(){
     this.isLoading=true;
-    this.placesService.fetchPlaces().subscribe(()=>{
+    this.placesService.fetchPlacesByUserId().subscribe(()=>{
       this.isLoading=false;
     });
   }

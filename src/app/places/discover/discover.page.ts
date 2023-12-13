@@ -55,7 +55,7 @@ export class DiscoverPage implements OnInit, OnDestroy {
         this.relevantPlaces = this.loadedPlaces;
       } else {
         this.relevantPlaces = this.loadedPlaces.filter(
-          place => place.userId !== userId && place.availableTo! > new Date
+          place => place.userId !== userId && place.availableTo! > new Date()
         );
       }
     });
