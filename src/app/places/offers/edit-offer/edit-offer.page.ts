@@ -44,6 +44,10 @@ export class EditOfferPage implements OnInit, OnDestroy {
           description: new FormControl(this.place.description, {
             updateOn: 'blur',
             validators: [Validators.required, Validators.maxLength(100)]
+          }), 
+          price: new FormControl(this.place.price, {
+            updateOn: 'blur',
+            validators: [Validators.required]
           })
         });
         this.isLoading = false;
@@ -57,9 +61,9 @@ export class EditOfferPage implements OnInit, OnDestroy {
             }
           }]
         })
-        .then(alertEl=>{
-          alertEl.present();
-        });
+          .then(alertEl => {
+            alertEl.present();
+          });
       });
     });
   }
@@ -76,7 +80,8 @@ export class EditOfferPage implements OnInit, OnDestroy {
       this.placesService.updatePlace(
         this.place.id!,
         this.form.value.title,
-        this.form.value.description).
+        this.form.value.description,
+        this.form.value.price).
         subscribe(() => {
           loadingEl.dismiss();
           this.form.reset();

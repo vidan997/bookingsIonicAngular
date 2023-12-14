@@ -135,7 +135,7 @@ export class PlacesService {
     );
   }
 
-  updatePlace(placeId: string, title: string, description: string) {
+  updatePlace(placeId: string, title: string, description: string,price: number) {
     let updatedPlaces: Place[];
     return this.places.pipe(
       take(1),
@@ -154,7 +154,7 @@ export class PlacesService {
           title,
           description,
           old.imageUrl,
-          old.price,
+          price,
           old.avaiableFrom,
           old.availableTo,
           old.userId);
