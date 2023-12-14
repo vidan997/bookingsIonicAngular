@@ -62,13 +62,16 @@ export class NewOfferPage implements OnInit {
         updateOn: 'blur',
         validators: [Validators.required]
       }),
-      image: new FormControl(null)
+      imageurl: new FormControl(null,{
+        updateOn: 'blur',
+        validators: [Validators.required]
+      })
     });
   }
 
   onCreateOffer() {
     console.log(this.form);
-    if (!this.form.valid || !this.form.get('image')?.value) {
+    if (!this.form.valid) {
       return;
     }
     console.log(this.form.value);
@@ -81,14 +84,15 @@ export class NewOfferPage implements OnInit {
         this.form.value.description,
         +this.form.value.price,
         new Date(this.form.value.dateFrom),
-        new Date(this.form.value.dateTo)).subscribe(() => {
+        new Date(this.form.value.dateTo),
+        this.form.value.imageurl).subscribe(() => {
           this.router.navigateByUrl('places/tabs/offers');
           loadingEl.dismiss();
         });
     });
   }
 
-  onImagePicked(imageData: string | File) {
+ /* onImagePicked(imageData: string | File) {
     let imageFile;
     if (typeof imageData === 'string') {
       try {
@@ -102,7 +106,7 @@ export class NewOfferPage implements OnInit {
       imageFile = imageData;
     }
 
-    this.form.patchValue({ image: imageFile });
-  }
+    //this.form.patchValue({ image: imageFile });
+  }*/
 
 }

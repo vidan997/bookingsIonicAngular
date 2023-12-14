@@ -103,7 +103,8 @@ export class PlacesService {
     description: string,
     price: number,
     dateFrom: Date,
-    dateTo: Date) {
+    dateTo: Date,
+    imageurl: string) {
 
     let generatedId: string;
     let newPlace: Place;
@@ -115,7 +116,7 @@ export class PlacesService {
         Math.random().toString(),
         title,
         description,
-        'https://cf.bstatic.com/xdata/images/hotel/max1024x768/271649742.jpg?k=ab00ae5f8ce8cc3cc148a4a6cab701a5d7bb3141d6079f76aab077a21324d200&o=&hp=1',
+        imageurl,
         price,
         dateFrom,
         dateTo,
