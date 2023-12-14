@@ -47,8 +47,8 @@
               <ion-datetime-button datetime="datetime"></ion-datetime-button>
               <ion-modal [keepContentsMounted]="true">
                 <ng-template>
-                  <ion-datetime presentation="date" id="datetime" min="2024-05-03" max="2025-01-01"
-                    formControlName="dateFrom"></ion-datetime>
+                  <ion-datetime presentation="date" id="datetime" [ngModel]="startDate" [min]="startDate"
+                    max="2025-01-01" formControlName="dateFrom"></ion-datetime>
                 </ng-template>
               </ion-modal>
             </ion-item>
@@ -59,8 +59,8 @@
               <ion-datetime-button datetime="datetimeto"></ion-datetime-button>
               <ion-modal [keepContentsMounted]="true">
                 <ng-template>
-                  <ion-datetime presentation="date" id="datetimeto" min="2023-05-03" max="2025-01-01"
-                    formControlName="dateTo"></ion-datetime>
+                  <ion-datetime presentation="date" id="datetimeto" [ngModel]="startDate" [min]="startDate"
+                    max="2025-01-01" formControlName="dateTo"></ion-datetime>
                 </ng-template>
               </ion-modal>
             </ion-item>

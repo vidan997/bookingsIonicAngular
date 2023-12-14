@@ -28,13 +28,13 @@ export class ImagePickerComponent implements OnInit {
       return;
     }
     const fr = new FileReader();
+    
+    fr.readAsDataURL(pickedFile);
     fr.onload = () => {
       const dataUrl = fr.result?.toString();
       this.selectedImage = dataUrl!;
       this.imagePick.emit(pickedFile);
     }
-    fr.readAsDataURL(pickedFile);
-
     console.log(event);
   }
 }

@@ -33,10 +33,14 @@ function base64toBlob(base64Data: string, contentType: string) {
 export class NewOfferPage implements OnInit {
 
   form: FormGroup = new FormGroup({});;
+  startDate!: string;
 
   constructor(private placesService: PlacesService, private router: Router, private loadingCtrl: LoadingController) { }
 
   ngOnInit() {
+    const startDateArray = new Date().toISOString().split('T')!;
+    this.startDate = startDateArray[0];
+
     this.form = new FormGroup({
       title: new FormControl(null, {
         updateOn: 'blur',
