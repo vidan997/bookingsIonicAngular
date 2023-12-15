@@ -12,11 +12,21 @@
           <ion-list>
             <ion-item>
               <ion-label position="floating">E-Mail</ion-label>
-              <ion-input type="email" ngModel name="email" required email></ion-input>
+              <ion-input type="email" ngModel name="email" required email #emailCtrl="ngModel"></ion-input>
+            </ion-item>
+            <ion-item *ngIf="!emailCtrl.valid && emailCtrl.touched" lines="none">
+              <ion-label>
+                Should be a valid email address.
+              </ion-label>
             </ion-item>
             <ion-item>
               <ion-label position="floating">Password</ion-label>
-              <ion-input type="password" ngModel name="password" required minlength="6"></ion-input>
+              <ion-input type="password" ngModel name="password" required minlength="6" #passwordCtrl="ngModel"></ion-input>
+            </ion-item>
+            <ion-item *ngIf="!passwordCtrl.valid && passwordCtrl.touched" lines="none">
+              <ion-label>
+                Should at least be 6 characters long.
+              </ion-label>
             </ion-item>
           </ion-list>
         </ion-col>
