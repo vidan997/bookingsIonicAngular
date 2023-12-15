@@ -25,7 +25,7 @@ export class OffersPage implements OnInit,OnDestroy {
   }
 
   ngOnInit() {
-    this.placesSub = this.placesService.places.subscribe(places =>{
+    this.placesSub = this.placesService.placesById.subscribe(places =>{
       this.offers=places;
     });
   }

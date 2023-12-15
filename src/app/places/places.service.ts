@@ -19,12 +19,16 @@ interface PlaceData {
 })
 export class PlacesService {
   private _places = new BehaviorSubject<Place[]>([]);
+  private _placesById = new BehaviorSubject<Place[]>([]);
 
 
   constructor(private authService: AuthService, private http: HttpClient) { }
 
   get places() {
     return this._places.asObservable();
+  }
+  get placesById() {
+    return this._placesById.asObservable();
   }
 
   getPlace(placeId: string) {
@@ -93,7 +97,7 @@ export class PlacesService {
       }
       return placeuserID;
     }), tap(placeuserID => {
-      this._places.next(placeuserID);
+      this._placesById.next(placeuserID);
     })
     );
   }
