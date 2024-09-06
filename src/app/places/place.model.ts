@@ -6,7 +6,7 @@ export class Place {
         public imageUrl?: string | undefined,
         public price?: number | undefined,
         public avaiableFrom?: Date | undefined,
-        public availableTo?: Date | undefined,
-        public userId?: string |undefined) {
+        public avaiableTo?: Date | undefined,
+        public userMail?: string |undefined) {
     }
 }

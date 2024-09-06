@@ -5,11 +5,10 @@ import { environment } from 'src/environments/environment';
 import { User } from './user.model';
 
 export interface AuthResponseData {
-  idToken: string;
   email: string;
-  refreshToken: string;
-  localId: string;
-  expiresIn: string;
+  id: string;
+  token: string;
+  tokenExperationDate: string;
 }
 
 @Injectable({
@@ -18,7 +17,7 @@ export interface AuthResponseData {
 export class AuthService {
   private _user = new BehaviorSubject<User>(null!);
 
-  get userId() {
+  get userMail() {
     return this._user.asObservable().pipe(map(user => {
       if (user) {
         return user.id;
@@ -38,18 +37,28 @@ export class AuthService {
     }));
   }
 
+  get userToken() {
+    return this._user.asObservable().pipe(map(user => {
+      if (user) {
+        return user.token;
+      } else {
+        return null!;
+      }
+    }))
+  }
+
   constructor(private http: HttpClient) { }
 
   signup(email: string, password: string) {
-    return this.http.post<AuthResponseData>(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${environment.firebaseAPIkey}`,
-      { email: email, password: password, returnSecureToken: true })
+    return this.http.post<AuthResponseData>(`http://localhost:8080/user/signup`,
+      { email: email, password: password })
       .pipe(tap(this.setUserData.bind(this)));
   }
 
 
   login(email: string, password: string) {
-    return this.http.post<AuthResponseData>(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${environment.firebaseAPIkey}`,
-      { email: email, password: password, returnSecureToken: true })
+    return this.http.post<AuthResponseData>(`http://localhost:8080/user/signin`,
+      { email: email, password: password })
       .pipe(tap(this.setUserData.bind(this)));
   }
 
@@ -58,11 +67,11 @@ export class AuthService {
   }
 
   private setUserData(userData: AuthResponseData) {
-    const expirationTime = new Date(new Date().getTime() + (+userData.expiresIn * 1000));
+    const expirationTime = new Date(new Date().getTime() + (+userData.tokenExperationDate * 1000));
     this._user.next(new User(
-      userData.localId,
+      userData.id,
       userData.email,
-      userData.idToken,
+      userData.token,
       expirationTime
     ));
   }

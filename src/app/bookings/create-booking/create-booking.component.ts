@@ -19,7 +19,7 @@ export class CreateBookingComponent implements OnInit {
   ngOnInit() {
     const startDateArray = this.selectedPlace?.avaiableFrom?.toISOString().split('T')!;
     this.startDate = startDateArray[0];
-    const endDateArray = this.selectedPlace?.availableTo?.toISOString().split('T')!;
+    const endDateArray = this.selectedPlace?.avaiableTo?.toISOString().split('T')!;
     this.endDate = endDateArray[0];
   }
 

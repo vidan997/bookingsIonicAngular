@@ -5,6 +5,7 @@ import { AuthService } from '../auth/auth.service';
 import { HttpClient } from '@angular/common/http';
 
 interface BookingData {
+  id: string;
   bookedFrom: string;
   bookedTo: string;
   firstName: string;
@@ -32,26 +33,28 @@ export class BookingService {
   addBooking(placeId: string, placeTitle: string, placeImage: string, firstname: string, lastName: string, guestNumber: number, dateFrom: Date, dateTo: Date) {
     let generatedId: string;
     let newBooking: Booking;
-    return this.authService.userId.pipe(take(1), switchMap(userId => {
+    return this.authService.userMail.pipe(take(1), switchMap(userId => {
       if (!userId) {
         throw new Error('No user id found!');
       }
+      console.log(guestNumber);
       newBooking = new Booking(
-        Math.random().toString(),
+        "999",
         placeId,
         userId,
         placeTitle,
         placeImage,
         firstname,
-        lastName, guestNumber,
+        lastName, 
+        guestNumber,
         dateFrom,
         dateTo
       );
-      return this.http.post<{ name: string }>('https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/bookings.json',
-        { ...newBooking, id: null }
+      return this.http.post<Booking>('http://localhost:8080/booking/save',
+        newBooking
       );
     }), switchMap(resdData => {
-      generatedId = resdData.name;
+      generatedId = resdData.id;
       return this.bookings;
     }),
       take(1),
@@ -62,24 +65,24 @@ export class BookingService {
   }
 
   fetchBookings() {
-    return this.authService.userId.pipe(switchMap(userId => {
-      return this.http.get<{ [key: string]: BookingData }>(`https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/bookings.json?orderBy="userId"&equalTo="${userId}"`);
+    return this.authService.userMail.pipe(switchMap(userMail => {
+      return this.http.get<BookingData[]>(`http://localhost:8080/booking/get/all/${userMail}`);
     }), map(bookingData => {
       const bookings = [];
       for (const key in bookingData) {
-        if (bookingData.hasOwnProperty(key)) {
-          bookings.push(
-            new Booking(key,
-              bookingData[key].placeId,
-              bookingData[key].userId,
-              bookingData[key].placeTitle,
-              bookingData[key].placeImage,
-              bookingData[key].firstName,
-              bookingData[key].lastName,
-              bookingData[key].guestNumber,
-              new Date(bookingData[key].bookedFrom),
-              new Date(bookingData[key].bookedTo)));
-        }
+
+        bookings.push(
+          new Booking(bookingData[key].id,
+            bookingData[key].placeId,
+            bookingData[key].userId,
+            bookingData[key].placeTitle,
+            bookingData[key].placeImage,
+            bookingData[key].firstName,
+            bookingData[key].lastName,
+            bookingData[key].guestNumber,
+            new Date(bookingData[key].bookedFrom),
+            new Date(bookingData[key].bookedTo)));
+
       }
       return bookings;
     }), tap(bookings => {
@@ -89,7 +92,7 @@ export class BookingService {
   }
 
   cancelBooking(bookingId: string) {
-    return this.http.delete(`https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/bookings/${bookingId}.json`)
+    return this.http.delete(`http://localhost:8080/booking/delete/${bookingId}`)
       .pipe(
         switchMap(() => {
           return this.bookings;

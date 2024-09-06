@@ -5,13 +5,14 @@ import { BehaviorSubject, map, of, switchMap, take, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
 interface PlaceData {
+  id: string;
   avaiableFrom: string;
-  availableTo: string;
+  avaiableTo: string;
   description: string;
   imageUrl: string;
   price: number;
   title: string;
-  userId: string;
+  userMail: string;
 }
 
 @Injectable({
@@ -33,7 +34,7 @@ export class PlacesService {
 
   getPlace(placeId: string) {
     return this.http.
-      get<PlaceData>(`https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/offered-places/${placeId}.json`).
+      get<PlaceData>(`http://localhost:8080/place/get/${placeId}`).
       pipe(
         map(placeData => {
           return new Place(
@@ -43,57 +44,60 @@ export class PlacesService {
             placeData.imageUrl,
             placeData.price,
             new Date(placeData.avaiableFrom),
-            new Date(placeData.availableTo),
-            placeData.userId);
+            new Date(placeData.avaiableTo),
+            placeData.userMail);
         })
       );
   }
 
   fetchPlaces() {
-    return this.http
-      .get<{ [key: string]: PlaceData }>('https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/offered-places.json')
-      .pipe(map(resData => {
-        const places = [];
-        for (const key in resData) {
-          if (resData.hasOwnProperty(key)) {
-            places.push(new Place(
-              key,
-              resData[key].title,
-              resData[key].description,
-              resData[key].imageUrl,
-              resData[key].price,
-              new Date(resData[key].avaiableFrom),
-              new Date(resData[key].availableTo),
-              resData[key].userId));
-          }
-        }
-        return places;
-      }),
-        tap(places => {
-          this._places.next(places);
-        })
-      );
+    //return this.http
+    //.get<PlaceData[]>('http://localhost:8080/place/all')
+    //.pipe(
+    return this.authService.userToken.pipe(switchMap(userToken => {
+      console.log(userToken);
+      const headers = { 'Authorization': 'Bearer '+userToken }
+      return this.http.get<PlaceData[]>('http://localhost:8080/place/all',{headers})
+    }), map(resData => {
+      const places = [];
+      for (const key in resData) {
+        places.push(new Place(
+          resData[key].id,
+          resData[key].title,
+          resData[key].description,
+          resData[key].imageUrl,
+          resData[key].price,
+          new Date(resData[key].avaiableFrom),
+          new Date(resData[key].avaiableTo),
+          resData[key].userMail));
+      }
+      console.log(places);
+      return places;
+    }),
+      tap(places => {
+        this._places.next(places);
+      })
+    );
   }
 
   fetchPlacesByUserId() {
-    return this.authService.userId.pipe(switchMap(userId => {
-      console.log(userId);
-      return this.http.get<{ [key: string]: PlaceData }>(`https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/offered-places.json?orderBy="userId"&equalTo="${userId}"`);
+    return this.authService.userMail.pipe(switchMap(userMail => {
+      console.log(userMail);
+      return this.http.get<PlaceData[]>(`http://localhost:8080/place/get/all/${userMail}`);
     }), map(resData => {
       console.log(resData);
-      const placeuserID = [];
+      const placeuserID: any[] = [];
       for (const key in resData) {
-        if (resData.hasOwnProperty(key)) {
-          placeuserID.push(new Place(
-            key,
-            resData[key].title,
-            resData[key].description,
-            resData[key].imageUrl,
-            resData[key].price,
-            new Date(resData[key].avaiableFrom!),
-            new Date(resData[key].availableTo!),
-            resData[key].userId));
-        }
+        placeuserID.push(new Place(
+          resData[key].id,
+          resData[key].title,
+          resData[key].description,
+          resData[key].imageUrl,
+          resData[key].price,
+          new Date(resData[key].avaiableFrom!),
+          new Date(resData[key].avaiableTo!),
+          resData[key].userMail));
+
       }
       return placeuserID;
     }), tap(placeuserID => {
@@ -110,14 +114,14 @@ export class PlacesService {
     dateTo: Date,
     imageurl: string) {
 
-    let generatedId: string;
+    let generatedId: string | undefined;
     let newPlace: Place;
-    return this.authService.userId.pipe(take(1), switchMap(userId => {
+    return this.authService.userMail.pipe(take(1), switchMap(userId => {
       if (!userId) {
         throw new Error('User not found!');
       }
       newPlace = new Place(
-        Math.random().toString(),
+        "1",
         title,
         description,
         imageurl,
@@ -126,9 +130,10 @@ export class PlacesService {
         dateTo,
         userId
       );
-      return this.http.post<{ name: string }>('https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/offered-places.json', { ...newPlace, id: null });
+      console.log(dateTo);
+      return this.http.post<Place>('http://localhost:8080/place/save', newPlace);
     }), switchMap(resData => {
-      generatedId = resData.name;
+      generatedId = resData.id;
       return this.places;
     }),
       take(1),
@@ -140,7 +145,7 @@ export class PlacesService {
     );
   }
 
-  updatePlace(placeId: string, title: string, description: string,price: number) {
+  updatePlace(placeId: string, title: string, description: string, price: number) {
     let updatedPlaces: Place[];
     return this.places.pipe(
       take(1),
@@ -151,9 +156,10 @@ export class PlacesService {
           return of(places);
         }
       }), switchMap(places => {
-        const updatedPlaceIndex = places.findIndex(pl => pl.id === placeId);
+        const updatedPlaceIndex = places.findIndex(pl => pl.id == placeId);
         updatedPlaces = [...places];
         const old = updatedPlaces[updatedPlaceIndex];
+        console.log(updatedPlaces);
         updatedPlaces[updatedPlaceIndex] = new Place(
           old.id,
           title,
@@ -161,11 +167,11 @@ export class PlacesService {
           old.imageUrl,
           price,
           old.avaiableFrom,
-          old.availableTo,
-          old.userId);
+          old.avaiableTo,
+          old.userMail);
         return this.http.put(
-          `https://ionic-angular-bookings-6e001-default-rtdb.europe-west1.firebasedatabase.app/offered-places/${placeId}.json`,
-          { ...updatedPlaces[updatedPlaceIndex], id: null });
+          `http://localhost:8080/place/update`,
+          updatedPlaces[updatedPlaceIndex]);
       })
       , tap(resData => {
         this._places.next(updatedPlaces);

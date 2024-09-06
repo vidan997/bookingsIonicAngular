@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { PlacesService } from '../../places.service';
 import { Router } from '@angular/router';
-import { LoadingController } from '@ionic/angular';
+import { AlertController, LoadingController } from '@ionic/angular';
 
 function base64toBlob(base64Data: string, contentType: string) {
   contentType = contentType || '';
@@ -35,7 +35,7 @@ export class NewOfferPage implements OnInit {
   form: FormGroup = new FormGroup({});;
   startDate!: string;
 
-  constructor(private placesService: PlacesService, private router: Router, private loadingCtrl: LoadingController) { }
+  constructor(private placesService: PlacesService, private router: Router, private loadingCtrl: LoadingController, private alertCtrl: AlertController) { }
 
   ngOnInit() {
     const startDateArray = new Date().toISOString().split('T')!;
@@ -62,7 +62,7 @@ export class NewOfferPage implements OnInit {
         updateOn: 'blur',
         validators: [Validators.required]
       }),
-      imageurl: new FormControl(null,{
+      imageurl: new FormControl(null, {
         updateOn: 'blur',
         validators: [Validators.required]
       })
@@ -88,25 +88,43 @@ export class NewOfferPage implements OnInit {
         this.form.value.imageurl).subscribe(() => {
           this.router.navigateByUrl('places/tabs/offers');
           loadingEl.dismiss();
+        }, errRes => {
+          loadingEl.dismiss();
+          let message = errRes.error;
+          
+          this.showAlert(message);
         });
     });
   }
 
- /* onImagePicked(imageData: string | File) {
-    let imageFile;
-    if (typeof imageData === 'string') {
-      try {
-        imageFile = base64toBlob(imageData.replace('data:image/jpeg;base64', ''), 'image/jpeg');
-      } catch (error) {
-        console.log(error);
-        return;
+  private showAlert(message: string) {
+    this.alertCtrl.create(
+      {
+        header: 'Failed!',
+        message: message,
+        buttons: ['Okay']
       }
-    }
-    else {
-      imageFile = imageData;
-    }
+    ).then(alertEl => {
+      alertEl.present();
+    })
+  }
 
-    //this.form.patchValue({ image: imageFile });
-  }*/
+
+  /* onImagePicked(imageData: string | File) {
+     let imageFile;
+     if (typeof imageData === 'string') {
+       try {
+         imageFile = base64toBlob(imageData.replace('data:image/jpeg;base64', ''), 'image/jpeg');
+       } catch (error) {
+         console.log(error);
+         return;
+       }
+     }
+     else {
+       imageFile = imageData;
+     }
+ 
+     //this.form.patchValue({ image: imageFile });
+   }*/
 
 }

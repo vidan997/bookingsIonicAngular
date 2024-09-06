@@ -45,19 +45,19 @@ export class DiscoverPage implements OnInit, OnDestroy {
   onLogout() {
     this.router.navigateByUrl('/auth');
     this.authService.logout();
-
   }
 
   onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
-    this.authService.userId.pipe(take(1)).subscribe(userId => {
+    this.authService.userMail.pipe(take(1)).subscribe(userMail => {
       console.log(event.detail);
       if (event.detail.value === 'all') {
         this.relevantPlaces = this.loadedPlaces;
       } else {
         this.relevantPlaces = this.loadedPlaces.filter(
-          place => place.userId !== userId && place.availableTo! > new Date()
+          place => place.userMail !== userMail && place.avaiableTo! > new Date() 
         );
       }
+
     });
 
   }

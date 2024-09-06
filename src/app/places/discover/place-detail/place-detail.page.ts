@@ -45,12 +45,12 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
       }
       this.isLoading = true;
       let fetchedUserId: string;
-      this.authService.userId.pipe(switchMap(userId => {
+      this.authService.userMail.pipe(switchMap(userId => {
         fetchedUserId = userId;
         return this.placesService.getPlace(paramMap.get('placeId')!)
       })).subscribe(place => {
         this.place = place;
-        this.isBookable = (place.userId !== fetchedUserId && place.availableTo! > new Date());
+        this.isBookable = (place.userMail !== fetchedUserId && place.avaiableTo! > new Date());
         this.isLoading = false;
       });
     });
