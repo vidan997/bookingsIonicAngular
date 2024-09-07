@@ -12,7 +12,7 @@ interface PlaceData {
   imageUrl: string;
   price: number;
   title: string;
-  userMail: string;
+  userId: number;
 }
 
 @Injectable({
@@ -33,31 +33,35 @@ export class PlacesService {
   }
 
   getPlace(placeId: string) {
+    var token: string | null;
+    let headers;
+    this.authService.userToken.subscribe(userToken => {
+      token = userToken;
+      headers = { 'Authorization': 'Bearer ' + token }
+    });
+
     return this.http.
-      get<PlaceData>(`http://localhost:8080/place/get/${placeId}`).
+      get<PlaceData>(`http://localhost:8080/place/get/${placeId}`, { headers }).
       pipe(
         map(placeData => {
           return new Place(
-            placeId,
+            placeData.id,
             placeData.title,
             placeData.description,
             placeData.imageUrl,
             placeData.price,
             new Date(placeData.avaiableFrom),
             new Date(placeData.avaiableTo),
-            placeData.userMail);
+            placeData.userId);
         })
       );
   }
 
   fetchPlaces() {
-    //return this.http
-    //.get<PlaceData[]>('http://localhost:8080/place/all')
-    //.pipe(
     return this.authService.userToken.pipe(switchMap(userToken => {
       console.log(userToken);
-      const headers = { 'Authorization': 'Bearer '+userToken }
-      return this.http.get<PlaceData[]>('http://localhost:8080/place/all',{headers})
+      const headers = { 'Authorization': 'Bearer ' + userToken }
+      return this.http.get<PlaceData[]>('http://localhost:8080/place/all', { headers })
     }), map(resData => {
       const places = [];
       for (const key in resData) {
@@ -69,7 +73,7 @@ export class PlacesService {
           resData[key].price,
           new Date(resData[key].avaiableFrom),
           new Date(resData[key].avaiableTo),
-          resData[key].userMail));
+          resData[key].userId));
       }
       console.log(places);
       return places;
@@ -81,9 +85,14 @@ export class PlacesService {
   }
 
   fetchPlacesByUserId() {
-    return this.authService.userMail.pipe(switchMap(userMail => {
-      console.log(userMail);
-      return this.http.get<PlaceData[]>(`http://localhost:8080/place/get/all/${userMail}`);
+    var token: string | null;
+    this.authService.userToken.subscribe(userToken => {
+      token = userToken;
+    });
+    return this.authService.userId.pipe(switchMap(userMail => {
+      console.log(token);
+      const headers = { 'Authorization': 'Bearer ' + token }
+      return this.http.get<PlaceData[]>(`http://localhost:8080/place/get/all/${userMail}`, { headers });
     }), map(resData => {
       console.log(resData);
       const placeuserID: any[] = [];
@@ -96,7 +105,7 @@ export class PlacesService {
           resData[key].price,
           new Date(resData[key].avaiableFrom!),
           new Date(resData[key].avaiableTo!),
-          resData[key].userMail));
+          resData[key].userId));
 
       }
       return placeuserID;
@@ -114,9 +123,13 @@ export class PlacesService {
     dateTo: Date,
     imageurl: string) {
 
+    var token: string | null;
+    this.authService.userToken.subscribe(userToken => {
+      token = userToken;
+    });
     let generatedId: string | undefined;
     let newPlace: Place;
-    return this.authService.userMail.pipe(take(1), switchMap(userId => {
+    return this.authService.userId.pipe(take(1), switchMap(userId => {
       if (!userId) {
         throw new Error('User not found!');
       }
@@ -130,8 +143,8 @@ export class PlacesService {
         dateTo,
         userId
       );
-      console.log(dateTo);
-      return this.http.post<Place>('http://localhost:8080/place/save', newPlace);
+      const headers = { 'Authorization': 'Bearer ' + token }
+      return this.http.post<Place>('http://localhost:8080/place/save', newPlace, { headers });
     }), switchMap(resData => {
       generatedId = resData.id;
       return this.places;
@@ -147,6 +160,10 @@ export class PlacesService {
 
   updatePlace(placeId: string, title: string, description: string, price: number) {
     let updatedPlaces: Place[];
+    var token: string | null;
+    this.authService.userToken.subscribe(userToken => {
+      token = userToken;
+    });
     return this.places.pipe(
       take(1),
       switchMap(places => {
@@ -168,10 +185,11 @@ export class PlacesService {
           price,
           old.avaiableFrom,
           old.avaiableTo,
-          old.userMail);
+          old.userId);
+        const headers = { 'Authorization': 'Bearer ' + token }
         return this.http.put(
           `http://localhost:8080/place/update`,
-          updatedPlaces[updatedPlaceIndex]);
+          updatedPlaces[updatedPlaceIndex],{headers});
       })
       , tap(resData => {
         this._places.next(updatedPlaces);

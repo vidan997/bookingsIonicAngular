@@ -44,13 +44,14 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
         return;
       }
       this.isLoading = true;
-      let fetchedUserId: string;
-      this.authService.userMail.pipe(switchMap(userId => {
+      let fetchedUserId: number;
+      this.authService.userId.pipe(switchMap(userId => {
         fetchedUserId = userId;
         return this.placesService.getPlace(paramMap.get('placeId')!)
       })).subscribe(place => {
         this.place = place;
-        this.isBookable = (place.userMail !== fetchedUserId && place.avaiableTo! > new Date());
+        this.isBookable = (place.userId != fetchedUserId && place.avaiableTo! > new Date());
+        
         this.isLoading = false;
       });
     });

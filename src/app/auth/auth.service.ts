@@ -5,8 +5,8 @@ import { environment } from 'src/environments/environment';
 import { User } from './user.model';
 
 export interface AuthResponseData {
+  id: number;
   email: string;
-  id: string;
   token: string;
   tokenExperationDate: string;
 }
@@ -17,7 +17,7 @@ export interface AuthResponseData {
 export class AuthService {
   private _user = new BehaviorSubject<User>(null!);
 
-  get userMail() {
+  get userId() {
     return this._user.asObservable().pipe(map(user => {
       if (user) {
         return user.id;

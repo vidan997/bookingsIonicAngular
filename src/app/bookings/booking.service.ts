@@ -14,7 +14,7 @@ interface BookingData {
   placeId: string;
   placeImage: string;
   placeTitle: string;
-  userId: string;
+  userId: number;
 }
 
 @Injectable({
@@ -33,7 +33,12 @@ export class BookingService {
   addBooking(placeId: string, placeTitle: string, placeImage: string, firstname: string, lastName: string, guestNumber: number, dateFrom: Date, dateTo: Date) {
     let generatedId: string;
     let newBooking: Booking;
-    return this.authService.userMail.pipe(take(1), switchMap(userId => {
+    var token: string | null;
+    this.authService.userToken.subscribe(userToken => {
+      token = userToken;
+    });
+
+    return this.authService.userId.pipe(take(1), switchMap(userId => {
       if (!userId) {
         throw new Error('No user id found!');
       }
@@ -45,13 +50,14 @@ export class BookingService {
         placeTitle,
         placeImage,
         firstname,
-        lastName, 
+        lastName,
         guestNumber,
         dateFrom,
         dateTo
       );
+      const headers = { 'Authorization': 'Bearer ' + token }
       return this.http.post<Booking>('http://localhost:8080/booking/save',
-        newBooking
+        newBooking,{headers}
       );
     }), switchMap(resdData => {
       generatedId = resdData.id;
@@ -65,8 +71,13 @@ export class BookingService {
   }
 
   fetchBookings() {
-    return this.authService.userMail.pipe(switchMap(userMail => {
-      return this.http.get<BookingData[]>(`http://localhost:8080/booking/get/all/${userMail}`);
+    var token: string | null;
+    this.authService.userToken.subscribe(userToken => {
+      token = userToken;
+    });
+    return this.authService.userId.pipe(switchMap(userId => {
+      const headers = { 'Authorization': 'Bearer ' + token }
+      return this.http.get<BookingData[]>(`http://localhost:8080/booking/get/all/${userId}`, { headers });
     }), map(bookingData => {
       const bookings = [];
       for (const key in bookingData) {
@@ -92,7 +103,13 @@ export class BookingService {
   }
 
   cancelBooking(bookingId: string) {
-    return this.http.delete(`http://localhost:8080/booking/delete/${bookingId}`)
+    var token: string | null;
+    let headers;
+    this.authService.userToken.subscribe(userToken => {
+      token = userToken;
+      headers = { 'Authorization': 'Bearer ' + token }
+    });
+    return this.http.delete(`http://localhost:8080/booking/delete/${bookingId}`,{headers})
       .pipe(
         switchMap(() => {
           return this.bookings;

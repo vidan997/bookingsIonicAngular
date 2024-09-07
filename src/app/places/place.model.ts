@@ -7,6 +7,6 @@ export class Place {
         public price?: number | undefined,
         public avaiableFrom?: Date | undefined,
         public avaiableTo?: Date | undefined,
-        public userMail?: string |undefined) {
+        public userId?: number |undefined) {
     }
 }

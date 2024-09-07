@@ -2,7 +2,7 @@ export class Booking {
     constructor(
         public id: string,
         public placeId: string,
-        public userMail: string,
+        public userId: number,
         public placeTitle: string,
         public placeImage: string,
         public firstName: string,
