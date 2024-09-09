@@ -62,9 +62,6 @@ export class AuthService {
       .pipe(tap(this.setUserData.bind(this)));
   }
 
-  logout() {
-    this._user.next(null!);
-  }
 
   private setUserData(userData: AuthResponseData) {
     const expirationTime = new Date(new Date().getTime() + (+userData.tokenExperationDate * 1000));

@@ -88,9 +88,6 @@ export class EditOfferPage implements OnInit, OnDestroy {
           this.router.navigate(['places/tabs/offers']);
         });
     })
-
-
-    console.log(this.form)
   }
 
 }

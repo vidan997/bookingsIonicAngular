@@ -25,6 +25,7 @@ export class DiscoverPage implements OnInit, OnDestroy {
     if (this.placesSub) {
       this.placesSub.unsubscribe();
     }
+
   }
 
   ngOnInit() {
@@ -44,12 +45,10 @@ export class DiscoverPage implements OnInit, OnDestroy {
 
   onLogout() {
     this.router.navigateByUrl('/auth');
-    this.authService.logout();
   }
 
   onFilterUpdate(event: CustomEvent<SegmentChangeEventDetail>) {
     this.authService.userId.pipe(take(1)).subscribe(userId => {
-      console.log(userId);
       if (event.detail.value === 'all') {
         this.relevantPlaces = this.loadedPlaces;
       } else {

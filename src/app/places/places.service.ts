@@ -59,7 +59,6 @@ export class PlacesService {
 
   fetchPlaces() {
     return this.authService.userToken.pipe(switchMap(userToken => {
-      console.log(userToken);
       const headers = { 'Authorization': 'Bearer ' + userToken }
       return this.http.get<PlaceData[]>('http://localhost:8080/place/all', { headers })
     }), map(resData => {
@@ -75,7 +74,6 @@ export class PlacesService {
           new Date(resData[key].avaiableTo),
           resData[key].userId));
       }
-      console.log(places);
       return places;
     }),
       tap(places => {
@@ -90,11 +88,9 @@ export class PlacesService {
       token = userToken;
     });
     return this.authService.userId.pipe(switchMap(userMail => {
-      console.log(token);
       const headers = { 'Authorization': 'Bearer ' + token }
       return this.http.get<PlaceData[]>(`http://localhost:8080/place/get/all/${userMail}`, { headers });
     }), map(resData => {
-      console.log(resData);
       const placeuserID: any[] = [];
       for (const key in resData) {
         placeuserID.push(new Place(
@@ -176,7 +172,6 @@ export class PlacesService {
         const updatedPlaceIndex = places.findIndex(pl => pl.id == placeId);
         updatedPlaces = [...places];
         const old = updatedPlaces[updatedPlaceIndex];
-        console.log(updatedPlaces);
         updatedPlaces[updatedPlaceIndex] = new Place(
           old.id,
           title,
