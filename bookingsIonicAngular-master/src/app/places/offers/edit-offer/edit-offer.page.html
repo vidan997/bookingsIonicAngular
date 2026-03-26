@@ -1,0 +1,142 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/places/tabs/offers"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Edit Offer</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="onUpdateOffer()" [disabled]="isLoading || !form?.valid">
+        <ion-icon name="checkmark" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div *ngIf="isLoading" class="ion-text-center" style="padding:18px">
+    <ion-spinner color="primary"></ion-spinner>
+  </div>
+
+  <form [formGroup]="form" *ngIf="!isLoading">
+    <ion-grid>
+
+      <ion-row>
+        <ion-col sizeSm="8" offsetSm="2">
+          <ion-item>
+            <ion-label position="floating">Title</ion-label>
+            <ion-input type="text" formControlName="title"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col sizeSm="8" offsetSm="2">
+          <ion-item>
+            <ion-label position="floating">Short Description</ion-label>
+            <ion-textarea rows="3" formControlName="description"></ion-textarea>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col sizeSm="8" offsetSm="2">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Rooms</ion-card-title>
+            </ion-card-header>
+
+            <ion-card-content>
+
+              <ion-item *ngFor="let room of rooms; let i = index">
+                <ion-label>
+                  <h2>{{ room.roomType }}</h2>
+                </ion-label>
+
+                <ion-input
+                  type="number"
+                  [value]="room.price"
+                  placeholder="Price"
+                  (ionInput)="onRoomPriceChange(i, $event)">
+                </ion-input>
+
+                <ion-input
+                  type="number"
+                  [value]="room.quantity"
+                  placeholder="Qty"
+                  (ionInput)="onRoomQuantityChange(i, $event)">
+                </ion-input>
+
+                <ion-button color="danger" fill="clear" (click)="removeRoom(i)">
+                  Remove
+                </ion-button>
+              </ion-item>
+
+              <ion-item>
+                <ion-input
+                  placeholder="Room type"
+                  [value]="newRoomType"
+                  (ionInput)="onNewRoomTypeChange($event)">
+                </ion-input>
+
+                <ion-input
+                  type="number"
+                  placeholder="Price"
+                  [value]="newRoomPrice"
+                  (ionInput)="onNewRoomPriceChange($event)">
+                </ion-input>
+
+                <ion-input
+                  type="number"
+                  placeholder="Qty"
+                  [value]="newRoomQuantity"
+                  (ionInput)="onNewRoomQuantityChange($event)">
+                </ion-input>
+
+                <ion-button (click)="addRoom()">
+                  Add
+                </ion-button>
+              </ion-item>
+
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+
+      <ion-row *ngIf="imagePreviews.length > 0">
+        <ion-col sizeSm="6" offsetSm="3">
+          <ion-list>
+            <ion-item *ngFor="let img of imagePreviews; let i = index">
+              <ion-thumbnail slot="start">
+                <img [src]="img" />
+              </ion-thumbnail>
+
+              <ion-label>
+                <p *ngIf="coverIndex === i"><strong>Cover image</strong></p>
+                <p *ngIf="coverIndex !== i">Tap to set as cover</p>
+              </ion-label>
+
+              <ion-button fill="outline" (click)="setCover(i)" [disabled]="coverIndex === i">
+                {{ coverIndex === i ? 'Cover' : 'Set cover' }}
+              </ion-button>
+
+              <ion-button color="danger" fill="outline" (click)="removeImage(i)">
+                Remove
+              </ion-button>
+            </ion-item>
+          </ion-list>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col sizeSm="6" offsetSm="3">
+          <input #fileInput type="file" accept="image/*" multiple hidden (change)="onFilesSelected($event)" />
+
+          <ion-button expand="block" fill="outline" (click)="openFilePicker()">
+            Add images
+          </ion-button>
+        </ion-col>
+      </ion-row>
+
+    </ion-grid>
+  </form>
+</ion-content>

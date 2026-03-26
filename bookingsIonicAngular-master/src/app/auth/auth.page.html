@@ -1,0 +1,101 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>{{ isLogin ? 'Login' : 'SignUp' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <form #f="ngForm" (ngSubmit)="onSubmit(f)">
+    <ion-grid>
+      <ion-row>
+        <ion-col sizeMd="6" offsetMd="3">
+          <ion-list>
+
+            <ion-item *ngIf="!isLogin">
+              <ion-label position="floating">First name</ion-label>
+              <ion-input type="text" ngModel name="firstName" required></ion-input>
+            </ion-item>
+            <ion-item *ngIf="!isLogin && f.submitted && f.controls['firstName']?.invalid" lines="none">
+              <ion-label>First name is required.</ion-label>
+            </ion-item>
+
+            <ion-item *ngIf="!isLogin">
+              <ion-label position="floating">Last name</ion-label>
+              <ion-input type="text" ngModel name="lastName" required></ion-input>
+            </ion-item>
+            <ion-item *ngIf="!isLogin && f.submitted && f.controls['lastName']?.invalid" lines="none">
+              <ion-label>Last name is required.</ion-label>
+            </ion-item>
+
+            <ion-item *ngIf="!isLogin">
+              <ion-label position="floating">Phone</ion-label>
+              <ion-input
+                type="tel"
+                inputmode="numeric"
+                pattern="^06\d{7,8}$"
+                minlength="9"
+                maxlength="10"
+                ngModel
+                name="phone"
+                required
+                (ionInput)="onPhoneInput($event)"
+              ></ion-input>
+            </ion-item>
+            
+            <ion-item *ngIf="!isLogin && f.submitted && f.controls['phone']?.invalid" lines="none">
+              <ion-label>
+                Phone must start with 06 and have 9–10 digits total (e.g. 061234567 or 0612345678).
+              </ion-label>
+            </ion-item>
+            
+
+            <ion-item>
+              <ion-label position="floating">E-Mail</ion-label>
+              <ion-input type="email" ngModel name="email" required email></ion-input>
+            </ion-item>
+            <ion-item *ngIf="f.submitted && f.controls['email']?.invalid" lines="none">
+              <ion-label>Should be a valid email address.</ion-label>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="floating">Password</ion-label>
+              <ion-input type="password" ngModel name="password" required minlength="6"></ion-input>
+            </ion-item>
+            <ion-item *ngIf="f.submitted && f.controls['password']?.invalid" lines="none">
+              <ion-label>Should at least be 6 characters long.</ion-label>
+            </ion-item>
+
+            <ion-item *ngIf="!isLogin">
+              <ion-label position="floating">Confirm Password</ion-label>
+              <ion-input type="password" ngModel name="confirmPassword" required minlength="6"></ion-input>
+            </ion-item>
+            <ion-item
+              *ngIf="!isLogin && f.submitted && f.value.password !== f.value.confirmPassword"
+              lines="none">
+              <ion-label>Passwords do not match.</ion-label>
+            </ion-item>
+
+          </ion-list>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col sizeMd="6" offsetMd="3">
+          <ion-button type="button" color="primary" fill="clear" expand="block" (click)="onSwitchAuthMode()">
+            Switch to {{ isLogin ? 'SignUp' : 'Login' }}
+          </ion-button>
+
+          <div class="ion-text-center">
+            <ion-button
+              type="submit"
+              color="primary"
+              expand="block"
+              [disabled]="!f.valid || (!isLogin && f.value.password !== f.value.confirmPassword)">
+              {{ isLogin ? 'Login' : 'Signup' }}
+            </ion-button>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
+</ion-content>

@@ -1,0 +1,158 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>{{ selectedPlace.title }}</ion-title>
+    <ion-buttons slot="primary">
+      <ion-button (click)="onCancel()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form (ngSubmit)="onBookPlace()" #f="ngForm">
+    <ion-grid>
+
+      <ion-row>
+        <ion-col sizeSm="6" offsetSm="3">
+          <ion-item>
+            <ion-label position="floating">First Name</ion-label>
+            <ion-input type="text" ngModel name="first-name" required></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col sizeSm="6" offsetSm="3">
+          <ion-item>
+            <ion-label position="floating">Last Name</ion-label>
+            <ion-input type="text" ngModel name="last-name" required></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col sizeSm="6" offsetSm="3">
+          <ion-item>
+            <ion-label position="stacked">Choose room</ion-label>
+            <ion-select [(ngModel)]="selectedRoomId" name="room-id" required interface="popover">
+              <ion-select-option
+                *ngFor="let room of selectedPlace.rooms"
+                [value]="room.id">
+                {{ room.roomType }} - {{ room.price | currency }} / Night
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row *ngIf="getSelectedRoom()">
+        <ion-col sizeSm="6" offsetSm="3">
+          <ion-card>
+            <ion-card-content>
+              <p><strong>Selected room:</strong> {{ getSelectedRoom()?.roomType }}</p>
+              <p><strong>Price:</strong> {{ getSelectedRoom()?.price | currency }} / Night</p>
+              <p><strong>Available quantity:</strong> {{ getSelectedRoom()?.quantity }}</p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col sizeSm="6" offsetSm="3">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Choose dates</ion-card-title>
+            </ion-card-header>
+
+            <ion-card-content>
+
+              <ion-item lines="none">
+                <ion-icon name="calendar" slot="start"></ion-icon>
+                <ion-label>
+                  <h3>From</h3>
+                  <p>{{ bookedFrom | date:'EEE, dd.MM.yyyy' }}</p>
+                </ion-label>
+                <ion-datetime-button datetime="fromDt"></ion-datetime-button>
+              </ion-item>
+
+              <ion-modal [keepContentsMounted]="true">
+                <ng-template>
+                  <ion-datetime
+                    id="fromDt"
+                    presentation="date"
+                    firstDayOfWeek="1"
+                    [showDefaultButtons]="true"
+                    doneText="OK"
+                    cancelText="Cancel"
+                    [min]="minDate"
+                    [max]="maxDate"
+                    [isDateEnabled]="isDateEnabled"
+                    [(ngModel)]="bookedFrom"
+                    name="bookedFrom"
+                    (ionChange)="onFromChanged($event.detail.value)"
+                  ></ion-datetime>
+                </ng-template>
+              </ion-modal>
+
+              <ion-item lines="none" style="margin-top: 8px;">
+                <ion-icon name="calendar-outline" slot="start"></ion-icon>
+                <ion-label>
+                  <h3>To</h3>
+                  <p>{{ bookedTo | date:'EEE, dd.MM.yyyy' }}</p>
+                </ion-label>
+                <ion-datetime-button datetime="toDt"></ion-datetime-button>
+              </ion-item>
+
+              <ion-modal [keepContentsMounted]="true">
+                <ng-template>
+                  <ion-datetime
+                    id="toDt"
+                    presentation="date"
+                    firstDayOfWeek="1"
+                    [showDefaultButtons]="true"
+                    doneText="OK"
+                    cancelText="Cancel"
+                    [min]="minDate"
+                    [max]="maxDate"
+                    [isDateEnabled]="isDateEnabled"
+                    [(ngModel)]="bookedTo"
+                    name="bookedTo"
+                    (ionChange)="onToChanged($event.detail.value)"
+                  ></ion-datetime>
+                </ng-template>
+              </ion-modal>
+
+              <ion-item lines="none" style="margin-top: 10px;">
+                <ion-icon name="information-circle" slot="start"></ion-icon>
+                <ion-label>
+                  <h3>Status</h3>
+                  <p *ngIf="datesValid(); else invalidDates">Dates available</p>
+                  <ng-template #invalidDates>
+                    <p>Pick a free range. “To” must be after “From”.</p>
+                  </ng-template>
+                </ion-label>
+              </ion-item>
+
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col sizeSm="6" offsetSm="3">
+          <p class="ion-text-start">{{ selectedPlace.description }}</p>
+          <ion-button
+            type="submit"
+            color="primary"
+            expand="block"
+            [disabled]="!f.valid || !datesValid() || !selectedRoomId"
+          >
+            Book
+          </ion-button>
+        </ion-col>
+      </ion-row>
+
+    </ion-grid>
+  </form>
+</ion-content>

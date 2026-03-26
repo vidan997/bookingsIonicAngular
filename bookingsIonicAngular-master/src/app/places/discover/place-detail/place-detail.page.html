@@ -1,0 +1,124 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/places/tabs/discover"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ isLoading ? 'Loading' : place?.title }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+  <div class="ion-text-center" *ngIf="isLoading">
+    <ion-spinner color="primary"></ion-spinner>
+  </div>
+
+  <ion-grid *ngIf="!isLoading && place">
+
+    <ion-row>
+      <ion-col sizeSm="8" offsetSm="2">
+        <ion-card>
+          <div style="
+              position: relative;
+              height: 360px;
+              overflow: hidden;
+              background: #000;
+            ">
+            <img [src]="getImageUrl(selectedImageUrl)" style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                filter: blur(20px);
+                transform: scale(1.1);
+                opacity: 0.6;
+              " />
+            <img [src]="getImageUrl(selectedImageUrl)" style="
+                position: relative;
+                z-index: 2;
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+                margin: auto;
+                display: block;
+              " />
+          </div>
+
+          <div *ngIf="place.imageUrls && place.imageUrls.length > 1" style="
+              display: flex;
+              gap: 10px;
+              overflow-x: auto;
+              padding: 12px;
+            ">
+            <div *ngFor="let img of place.imageUrls; let i = index" (click)="selectImage(i)" style="
+                min-width: 80px;
+                height: 80px;
+                border-radius: 10px;
+                overflow: hidden;
+                cursor: pointer;
+                position: relative;
+              " [style.outline]="i === selectedIndex
+                ? '2px solid var(--ion-color-primary)'
+                : '2px solid transparent'">
+
+              <img [src]="getImageUrl(img)" style="
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                " />
+            </div>
+          </div>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col sizeSm="8" offsetSm="2">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>{{ place.title }}</ion-card-title>
+            <ion-card-subtitle *ngIf="place.rooms && place.rooms.length > 0">
+              From {{ getLowestRoomPrice() | currency }} / Night
+            </ion-card-subtitle>
+          </ion-card-header>
+
+          <ion-card-content>
+            <p style="line-height:1.6">{{ place.description }}</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row *ngIf="place.rooms && place.rooms.length > 0">
+      <ion-col sizeSm="8" offsetSm="2">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Rooms</ion-card-title>
+          </ion-card-header>
+
+          <ion-list>
+            <ion-item *ngFor="let room of place.rooms">
+              <ion-label>
+                <h2>{{ room.roomType }}</h2>
+                <p>Price: {{ room.price | currency }} / Night</p>
+                <p>Available quantity: {{ room.quantity }}</p>
+              </ion-label>
+            </ion-item>
+          </ion-list>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <ion-row *ngIf="isBookable && isLoggedIn()">
+      <ion-col sizeSm="8" offsetSm="2">
+        <ion-button expand="block" color="primary" size="large" (click)="onBookPlace()">
+          Book this place
+        </ion-button>
+      </ion-col>
+    </ion-row>
+
+  </ion-grid>
+
+</ion-content>
