@@ -1,9 +1,12 @@
+import { RoomSeasonPrice } from './room-season-price.model';
+
 export class Room {
-    constructor(
-      public id?: number,
-      public placeid?: number,
-      public roomType?: string,
-      public price?: number,
-      public quantity?: number
-    ) {}
-  }
+  constructor(
+    public id: number | null,
+    public placeid: number | null,
+    public name: string,
+    public roomType: string,
+    public capacity: number,
+    public seasonPrices: RoomSeasonPrice[]
+  ) {}
+}

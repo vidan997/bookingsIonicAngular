@@ -3,6 +3,26 @@ import { BehaviorSubject, map, switchMap, take, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { Place } from './place.model';
 import { AuthService } from '../auth/auth.service';
+import { RoomSeasonPrice } from './offers/room-season-price.model';
+import { Room } from './offers/room.model';
+
+interface RoomSeasonPriceData {
+  id: number;
+  roomId: number;
+  seasonName: string;
+  dateFrom: string;
+  dateTo: string;
+  pricePerNight: number | string;
+}
+
+interface RoomData {
+  id: number;
+  placeid: number;
+  name: string;
+  roomType: string;
+  capacity: number;
+  seasonPrices?: RoomSeasonPriceData[];
+}
 
 interface PlaceData {
   id: string;
@@ -11,17 +31,9 @@ interface PlaceData {
   description: string;
   imageUrl: string;
   imageUrls?: string[];
-  price: number | string;
   title: string;
   userId: number;
-
-  rooms?: {
-    id: number;
-    placeid: number;
-    roomType: string;
-    price: number;
-    quantity: number;
-  }[];
+  rooms?: RoomData[];
 }
 
 @Injectable({
@@ -31,7 +43,7 @@ export class PlacesService {
   private _places = new BehaviorSubject<Place[]>([]);
   private _placesById = new BehaviorSubject<Place[]>([]);
 
-  constructor(private authService: AuthService, private http: HttpClient) { }
+  constructor(private authService: AuthService, private http: HttpClient) {}
 
   get places() {
     return this._places.asObservable();
@@ -41,15 +53,35 @@ export class PlacesService {
     return this._placesById.asObservable();
   }
 
+  private mapToSeasonPrice(seasonPriceData: RoomSeasonPriceData): RoomSeasonPrice {
+    return new RoomSeasonPrice(
+      seasonPriceData.id,
+      seasonPriceData.roomId,
+      seasonPriceData.seasonName,
+      seasonPriceData.dateFrom,
+      seasonPriceData.dateTo,
+      Number(seasonPriceData.pricePerNight)
+    );
+  }
+
+  private mapToRoom(roomData: RoomData): Room {
+    const seasonPrices = roomData.seasonPrices
+      ? roomData.seasonPrices.map(sp => this.mapToSeasonPrice(sp))
+      : [];
+
+    return new Room(
+      roomData.id,
+      roomData.placeid,
+      roomData.name,
+      roomData.roomType,
+      roomData.capacity,
+      seasonPrices
+    );
+  }
+
   private mapToPlace(placeData: PlaceData): Place {
     const rooms = placeData.rooms
-      ? placeData.rooms.map(r => ({
-        id: r.id,
-        placeid: r.placeid,
-        roomType: r.roomType,
-        price: r.price,
-        quantity: r.quantity
-      }))
+      ? placeData.rooms.map(r => this.mapToRoom(r))
       : [];
 
     return new Place(
@@ -68,8 +100,6 @@ export class PlacesService {
       rooms
     );
   }
-
-
 
   getPlace(placeId: string) {
     return this.authService.userToken.pipe(
@@ -124,7 +154,17 @@ export class PlacesService {
     dateTo: Date,
     images: File[],
     coverIndex: number,
-    rooms: { roomType: string; price: number; quantity: number }[]
+    rooms: {
+      name: string;
+      roomType: string;
+      capacity: number;
+      seasonPrices: {
+        seasonName: string;
+        dateFrom: string;
+        dateTo: string;
+        pricePerNight: number;
+      }[];
+    }[]
   ) {
     return this.authService.userId.pipe(
       take(1),
@@ -164,7 +204,21 @@ export class PlacesService {
     existingImages: string[],
     newImages: File[],
     coverIndex: number,
-    rooms: { id?: number; placeid?: number; roomType: string; price: number; quantity: number }[]
+    rooms: {
+      id?: number | null;
+      placeid?: number | null;
+      name: string;
+      roomType: string;
+      capacity: number;
+      seasonPrices: {
+        id?: number | null;
+        roomId?: number | null;
+        seasonName: string;
+        dateFrom: string;
+        dateTo: string;
+        pricePerNight: number;
+      }[];
+    }[]
   ) {
     return this.authService.userToken.pipe(
       take(1),
@@ -206,6 +260,4 @@ export class PlacesService {
       })
     );
   }
-
-
 }

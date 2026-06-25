@@ -39,7 +39,7 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
     private loadingCtrl: LoadingController,
     private authService: AuthService,
     private router: Router
-  ) { }
+  ) {}
 
   ngOnDestroy(): void {
     if (this.placesSub) {
@@ -74,7 +74,8 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
           } else {
             this.isBookable =
               String(this.place.userId) !== String(fetchedUserId) &&
-              this.place.avaiableTo! > new Date();
+              !!this.place.avaiableTo &&
+              this.place.avaiableTo > new Date();
           }
 
           const imgs = (this.place.imageUrls && this.place.imageUrls.length > 0)
@@ -111,38 +112,65 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
     this.selectedImageUrl = this.place.imageUrls[index];
   }
 
-  getLowestRoomPrice(): number {
+  getLowestRoomPrice(): number | null {
     if (!this.place?.rooms || this.place.rooms.length === 0) {
-      return 0;
+      return null;
     }
 
-    return Math.min(...this.place.rooms.map(room => Number(room.price || 0)));
-  }
+    const allPrices: number[] = [];
 
-  onBookPlace() {
-    this.actionSheetCtrl.create({
-      header: 'Choose an Action',
-      buttons: [
-        {
-          text: 'Select Date and Room',
-          handler: () => {
-            this.openBookingModal();
+    this.place.rooms.forEach(room => {
+      if (room.seasonPrices && room.seasonPrices.length > 0) {
+        room.seasonPrices.forEach(season => {
+          const price = Number(season.pricePerNight);
+          if (!isNaN(price) && price > 0) {
+            allPrices.push(price);
           }
-        },
-        {
-          text: 'Cancel',
-          role: 'destructive'
-        }
-      ]
-    }).then(actionSheetEl => {
-      actionSheetEl.present();
+        });
+      }
     });
+
+    if (allPrices.length === 0) {
+      return null;
+    }
+
+    return Math.min(...allPrices);
   }
 
-  openBookingModal() {
+  getRoomTypesText(): string {
+    if (!this.place?.rooms || this.place.rooms.length === 0) {
+      return '';
+    }
+
+    const uniqueTypes = [...new Set(
+      this.place.rooms
+        .map(room => room.roomType)
+        .filter(type => !!type)
+    )];
+
+    return uniqueTypes.join(', ');
+  }
+
+  getRoomsCount(): number {
+    return this.place?.rooms ? this.place.rooms.length : 0;
+  }
+
+  onSelectRoomType(roomType: string) {
+    if (!this.isLoggedIn() || !this.isBookable) {
+      return;
+    }
+  
+    this.openBookingModal(roomType);
+  }
+  
+  openBookingModal(roomType: string) {
     this.modalController.create({
       component: CreateBookingComponent,
-      componentProps: { selectedPlace: this.place }
+      componentProps: {
+        selectedPlace: this.place,
+        selectedRoomType: roomType
+      },
+      cssClass: 'booking-modal-wide'
     })
       .then(modalEl => {
         modalEl.present();
@@ -150,30 +178,132 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
       })
       .then(resultData => {
         if (resultData.role === 'confirm') {
-          this.loadingCtrl.create({
-            message: 'Booking place...'
-          }).then(loadingEl => {
-            loadingEl.present();
-
-            const data = resultData.data.bookingData;
-
-            this.bookingService.addBooking(
-              this.place.id!,
-              this.place.title!,
-              this.place.imageUrl!,
-              data.roomid,
-              data.roomType,
-              data.priceAtBooking,
-              data.firstName,
-              data.lastName,
-              data.bookedFrom,
-              data.bookedTo
-            ).subscribe({
-              next: () => loadingEl.dismiss(),
-              error: () => loadingEl.dismiss()
-            });
-          });
+          this.bookingService.fetchBookings().pipe(take(1)).subscribe();
         }
       });
   }
+
+  getUniqueRoomTypes(): string[] {
+    if (!this.place?.rooms || this.place.rooms.length === 0) {
+      return [];
+    }
+  
+    return [...new Set(
+      this.place.rooms
+        .map(room => room.roomType)
+        .filter(type => !!type)
+    )];
+  }
+  
+  getLowestPriceForRoomType(roomType: string): number | null {
+    if (!this.place?.rooms || this.place.rooms.length === 0) {
+      return null;
+    }
+  
+    const prices: number[] = [];
+  
+    this.place.rooms
+      .filter(room => room.roomType === roomType)
+      .forEach(room => {
+        if (room.seasonPrices && room.seasonPrices.length > 0) {
+          room.seasonPrices.forEach(season => {
+            const price = Number(season.pricePerNight);
+            if (!isNaN(price) && price > 0) {
+              prices.push(price);
+            }
+          });
+        }
+      });
+  
+    if (prices.length === 0) {
+      return null;
+    }
+  
+    return Math.min(...prices);
+  }
+
+  private getTodayDateOnly(): Date {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  }
+  
+  private getPriceForSeasonDate(season: any, targetDate: Date): number | null {
+    const rawFrom = season?.dateFrom ?? season?.fromDate ?? season?.startDate ?? season?.from;
+    const rawTo = season?.dateTo ?? season?.toDate ?? season?.endDate ?? season?.to;
+    const rawPrice = season?.pricePerNight ?? season?.price ?? null;
+  
+    if (!rawFrom || !rawTo || rawPrice === null || rawPrice === undefined) {
+      return null;
+    }
+  
+    const from = new Date(rawFrom);
+    const to = new Date(rawTo);
+  
+    from.setHours(0, 0, 0, 0);
+    to.setHours(0, 0, 0, 0);
+  
+    if (targetDate >= from && targetDate <= to) {
+      const price = Number(rawPrice);
+      return isNaN(price) ? null : price;
+    }
+  
+    return null;
+  }
+  
+  getCurrentRoomPrice(): number | null {
+    if (!this.place?.rooms || this.place.rooms.length === 0) {
+      return null;
+    }
+  
+    const today = this.getTodayDateOnly();
+    const prices: number[] = [];
+  
+    this.place.rooms.forEach((room: any) => {
+      if (room.seasonPrices?.length) {
+        room.seasonPrices.forEach((season: any) => {
+          const price = this.getPriceForSeasonDate(season, today);
+          if (price !== null && price > 0) {
+            prices.push(price);
+          }
+        });
+      }
+    });
+  
+    if (prices.length === 0) {
+      return null;
+    }
+  
+    return Math.min(...prices);
+  }
+  
+  getCurrentPriceForRoomType(roomType: string): number | null {
+    if (!this.place?.rooms || this.place.rooms.length === 0) {
+      return null;
+    }
+  
+    const today = this.getTodayDateOnly();
+    const prices: number[] = [];
+  
+    this.place.rooms
+      .filter((room: any) => String(room.roomType).trim().toLowerCase() === String(roomType).trim().toLowerCase())
+      .forEach((room: any) => {
+        if (room.seasonPrices?.length) {
+          room.seasonPrices.forEach((season: any) => {
+            const price = this.getPriceForSeasonDate(season, today);
+            if (price !== null && price > 0) {
+              prices.push(price);
+            }
+          });
+        }
+      });
+  
+    if (prices.length === 0) {
+      return null;
+    }
+  
+    return Math.min(...prices);
+  }
+
+  
 }

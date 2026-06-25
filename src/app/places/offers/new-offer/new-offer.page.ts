@@ -1,8 +1,31 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { PlacesService } from '../../places.service';
+import { AlertController, LoadingController, ModalController } from '@ionic/angular';
 import { Router } from '@angular/router';
-import { AlertController, LoadingController } from '@ionic/angular';
+import { PlacesService } from '../../places.service';
+import { OfferSeasonPricesComponent } from '../components/offer-season-prices/offer-season-prices.component';
+
+type NewSeasonPrice = {
+  seasonName: string;
+  dateFrom: string;
+  dateTo: string;
+  pricePerNight: number;
+};
+
+type SeasonDraft = {
+  seasonName: string;
+  dateFrom: string;
+  dateTo: string;
+  pricePerNight: number | null;
+};
+
+type NewRoom = {
+  name: string;
+  roomType: string;
+  capacity: number;
+  seasonPrices: NewSeasonPrice[];
+  seasonDraft: SeasonDraft;
+};
 
 @Component({
   selector: 'app-new-offer',
@@ -10,16 +33,23 @@ import { AlertController, LoadingController } from '@ionic/angular';
   styleUrls: ['./new-offer.page.scss'],
 })
 export class NewOfferPage implements OnInit {
-
   form: FormGroup = new FormGroup({});
-  startDate!: string;
+  startDate = '';
 
   selectedFiles: File[] = [];
   imagePreviews: string[] = [];
   coverIndex = 0;
 
-  rooms: { roomType: string; price: number; quantity: number }[] = [];
-  customRoomType = '';
+  rooms: NewRoom[] = [];
+
+  roomTypes: string[] = [
+    'Single',
+    'Double',
+    'Triple',
+    'Apartment',
+    'Studio',
+    'Suite'
+  ];
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
@@ -27,12 +57,12 @@ export class NewOfferPage implements OnInit {
     private placesService: PlacesService,
     private router: Router,
     private loadingCtrl: LoadingController,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private modalController: ModalController
   ) {}
 
-  ngOnInit() {
-    const startDateArray = new Date().toISOString().split('T');
-    this.startDate = startDateArray[0];
+  ngOnInit(): void {
+    this.startDate = new Date().toISOString().split('T')[0];
 
     this.form = new FormGroup({
       title: new FormControl(null, {
@@ -44,28 +74,29 @@ export class NewOfferPage implements OnInit {
         validators: [Validators.required, Validators.maxLength(100)]
       }),
       dateFrom: new FormControl(null, {
-        updateOn: 'blur',
         validators: [Validators.required]
       }),
       dateTo: new FormControl(null, {
-        updateOn: 'blur',
         validators: [Validators.required]
       }),
-      roomType: new FormControl(null),
-      roomPrice: new FormControl(null),
-      roomQuantity: new FormControl(1)
+      roomName: new FormControl(null),
+      roomType: new FormControl('Single'),
+      roomCapacity: new FormControl(1)
     });
   }
 
-  onFilesSelected(event: Event) {
+  onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
 
-    this.selectedFiles = Array.from(input.files);
-    this.imagePreviews = [];
-    this.coverIndex = 0;
+    if (!input.files || input.files.length === 0) {
+      return;
+    }
 
-    this.selectedFiles.forEach(file => {
+    const files = Array.from(input.files);
+
+    files.forEach(file => {
+      this.selectedFiles.push(file);
+
       const reader = new FileReader();
       reader.onload = () => {
         this.imagePreviews.push(reader.result as string);
@@ -78,15 +109,17 @@ export class NewOfferPage implements OnInit {
     }
   }
 
-  setCover(index: number) {
+  setCover(index: number): void {
     this.coverIndex = index;
   }
 
-  removeImage(index: number) {
+  removeImage(index: number): void {
     this.selectedFiles.splice(index, 1);
     this.imagePreviews.splice(index, 1);
 
-    if (this.coverIndex === index) {
+    if (this.imagePreviews.length === 0) {
+      this.coverIndex = 0;
+    } else if (this.coverIndex === index) {
       this.coverIndex = 0;
     } else if (this.coverIndex > index) {
       this.coverIndex--;
@@ -97,42 +130,121 @@ export class NewOfferPage implements OnInit {
     }
   }
 
-  onCustomRoomTypeChange(event: any) {
-    this.customRoomType = event?.detail?.value || '';
-  }
+  addRoom(): void {
+    const roomName = (this.form.value.roomName || '').trim();
+    const roomType = (this.form.value.roomType || '').trim();
+    const roomCapacity = Number(this.form.value.roomCapacity);
 
-  addRoom() {
-    const selectedRoomType = this.form.value.roomType;
-    const roomType = this.customRoomType?.trim() || selectedRoomType;
-    const roomPrice = Number(this.form.value.roomPrice);
-    const roomQuantity = Number(this.form.value.roomQuantity);
-
-    if (!roomType || !roomPrice || roomPrice < 1 || !roomQuantity || roomQuantity < 1) {
-      this.showAlert('Please enter valid room type, price and quantity.');
+    if (!roomName || !roomType || !roomCapacity || roomCapacity < 1) {
+      this.showAlert('Please enter valid room name, room type and capacity.');
       return;
     }
 
     this.rooms.push({
-      roomType: roomType,
-      price: roomPrice,
-      quantity: roomQuantity
+      name: roomName,
+      roomType,
+      capacity: roomCapacity,
+      seasonPrices: [],
+      seasonDraft: {
+        seasonName: '',
+        dateFrom: '',
+        dateTo: '',
+        pricePerNight: null
+      }
     });
 
     this.form.patchValue({
-      roomType: null,
-      roomPrice: null,
-      roomQuantity: 1
+      roomName: null,
+      roomType: 'Single',
+      roomCapacity: 1
     });
-
-    this.customRoomType = '';
   }
 
-  removeRoom(index: number) {
+  removeRoom(index: number): void {
     this.rooms.splice(index, 1);
   }
 
-  onCreateOffer() {
-    if (!this.form.valid) return;
+  openSeasonPricesModal(room: NewRoom, roomIndex: number): void {
+    const allowedFrom = this.getPlaceDateFrom();
+    const allowedTo = this.getPlaceDateTo();
+
+    if (!allowedFrom || !allowedTo) {
+      this.showAlert('Please select available from and available to dates first.');
+      return;
+    }
+
+    const roomCopy: NewRoom = JSON.parse(JSON.stringify(room));
+
+    this.modalController.create({
+      component: OfferSeasonPricesComponent,
+      componentProps: {
+        room: roomCopy,
+        roomIndex,
+        allowedFrom,
+        allowedTo
+      },
+      cssClass: 'season-prices-modal'
+    })
+      .then(modalEl => {
+        modalEl.present();
+        return modalEl.onDidDismiss();
+      })
+      .then(resultData => {
+        if (resultData.role === 'confirm' && resultData.data?.room) {
+          this.rooms[roomIndex] = resultData.data.room;
+        }
+      });
+  }
+
+  getPlaceDateFrom(): string {
+    return this.extractDateOnly(this.form.value.dateFrom);
+  }
+
+  getPlaceDateTo(): string {
+    return this.extractDateOnly(this.form.value.dateTo);
+  }
+
+  getMinDateTo(): string {
+    return this.getPlaceDateFrom() || this.startDate;
+  }
+
+  roomHasOutOfRangeSeason(room: NewRoom): boolean {
+    const allowedFrom = this.getPlaceDateFrom();
+    const allowedTo = this.getPlaceDateTo();
+
+    if (!allowedFrom || !allowedTo) {
+      return false;
+    }
+
+    const allowedFromTime = new Date(allowedFrom).getTime();
+    const allowedToTime = new Date(allowedTo).getTime();
+
+    return room.seasonPrices.some(season => {
+      const seasonFrom = new Date(season.dateFrom).getTime();
+      const seasonTo = new Date(season.dateTo).getTime();
+
+      return seasonFrom < allowedFromTime || seasonTo > allowedToTime;
+    });
+  }
+
+  onCreateOffer(): void {
+    if (!this.form.valid) {
+      this.showAlert('Please fill in all required offer fields.');
+      return;
+    }
+
+    const placeDateFrom = this.getPlaceDateFrom();
+    const placeDateTo = this.getPlaceDateTo();
+
+    if (!placeDateFrom || !placeDateTo) {
+      this.showAlert('Please select available from and available to dates.');
+      return;
+    }
+
+    if (new Date(placeDateFrom).getTime() > new Date(placeDateTo).getTime()) {
+      this.showAlert('"Available from" must be earlier than or equal to "available to".');
+      return;
+    }
 
     if (this.selectedFiles.length === 0) {
       this.showAlert('Please select at least one image.');
@@ -144,21 +256,40 @@ export class NewOfferPage implements OnInit {
       return;
     }
 
-    this.loadingCtrl.create({ message: 'Creating place...' }).then(loadingEl => {
+    const roomWithoutSeason = this.rooms.find(room => room.seasonPrices.length === 0);
+    if (roomWithoutSeason) {
+      this.showAlert('Every room must have at least one season price.');
+      return;
+    }
+
+    const invalidRoom = this.rooms.find(room => this.roomHasOutOfRangeSeason(room));
+    if (invalidRoom) {
+      this.showAlert('Some season prices are outside the allowed offer date range.');
+      return;
+    }
+
+    const payloadRooms = this.rooms.map(room => ({
+      name: room.name,
+      roomType: room.roomType,
+      capacity: room.capacity,
+      seasonPrices: room.seasonPrices
+    }));
+
+    this.loadingCtrl.create({ message: 'Creating offer...' }).then(loadingEl => {
       loadingEl.present();
 
       this.placesService.addPlaceMultipart(
         this.form.value.title,
         this.form.value.description,
-        new Date(this.form.value.dateFrom),
-        new Date(this.form.value.dateTo),
+        new Date(placeDateFrom),
+        new Date(placeDateTo),
         this.selectedFiles,
         this.coverIndex,
-        this.rooms
+        payloadRooms
       ).subscribe({
         next: () => {
           loadingEl.dismiss();
-          this.router.navigateByUrl('places/tabs/offers');
+          this.router.navigateByUrl('/places/tabs/offers');
         },
         error: (errRes) => {
           loadingEl.dismiss();
@@ -169,12 +300,18 @@ export class NewOfferPage implements OnInit {
     });
   }
 
-  private showAlert(message: string) {
+  private extractDateOnly(value: string | null | undefined): string {
+    if (!value) {
+      return '';
+    }
+    return String(value).split('T')[0];
+  }
+
+  private showAlert(message: string): void {
     this.alertCtrl.create({
-      header: 'Failed!',
+      header: 'Warning',
       message,
-      buttons: ['Okay']
+      buttons: ['OK']
     }).then(alertEl => alertEl.present());
   }
-  
 }

@@ -1,0 +1,142 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Season prices</ion-title>
+
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="cancel()">Cancel</ion-button>
+      <ion-button color="primary" (click)="save()">Save</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-grid fixed>
+    <ion-row>
+      <ion-col size="12" sizeLg="10" offsetLg="1">
+        <ion-card style="margin-bottom: 14px;">
+          <ion-card-header style="padding-bottom: 8px;">
+            <ion-card-title style="font-size: 18px;">
+              {{ editableRoom?.name }}
+            </ion-card-title>
+            <ion-card-subtitle>
+              {{ editableRoom?.roomType }} · Capacity {{ editableRoom?.capacity }}
+            </ion-card-subtitle>
+          </ion-card-header>
+
+          <ion-card-content style="padding-top: 8px;">
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 10px;">
+              Add season
+            </div>
+
+            <ion-row>
+              <ion-col size="12" sizeMd="7">
+                <ion-item>
+                  <ion-label position="stacked">Season name</ion-label>
+                  <ion-input
+                    [value]="draft.seasonName"
+                    (ionInput)="onInputChange('seasonName', $event)">
+                  </ion-input>
+                </ion-item>
+              </ion-col>
+
+              <ion-col size="12" sizeMd="5">
+                <ion-item>
+                  <ion-label position="stacked">Price / night</ion-label>
+                  <ion-input
+                    type="number"
+                    [value]="draft.pricePerNight"
+                    (ionInput)="onInputChange('pricePerNight', $event)">
+                  </ion-input>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+
+            <ion-row style="margin-top: 4px;">
+              <ion-col size="12" sizeMd="6">
+                <div style="border: 1px solid var(--ion-color-step-150); border-radius: 12px; padding: 12px;">
+                  <div style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">
+                    From
+                  </div>
+                  <input
+                    type="date"
+                    [value]="draft.dateFrom"
+                    [min]="allowedFrom"
+                    [max]="draft.dateTo || allowedTo"
+                    (change)="onInputChange('dateFrom', $event)"
+                    style="width: 100%; background: transparent; border: 0; outline: none; color: inherit; font-size: 15px;"
+                  />
+                </div>
+              </ion-col>
+
+              <ion-col size="12" sizeMd="6">
+                <div style="border: 1px solid var(--ion-color-step-150); border-radius: 12px; padding: 12px;">
+                  <div style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">
+                    To
+                  </div>
+                  <input
+                    type="date"
+                    [value]="draft.dateTo"
+                    [min]="draft.dateFrom || allowedFrom"
+                    [max]="allowedTo"
+                    (change)="onInputChange('dateTo', $event)"
+                    style="width: 100%; background: transparent; border: 0; outline: none; color: inherit; font-size: 15px;"
+                  />
+                </div>
+              </ion-col>
+            </ion-row>
+
+            <ion-button expand="block" style="margin-top: 14px;" (click)="addSeason()">
+              Add season
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+
+        <div style="font-size: 16px; font-weight: 600; margin: 10px 4px 8px 4px;">
+          Added seasons
+        </div>
+
+        <div *ngIf="editableRoom?.seasonPrices?.length === 0" style="opacity: 0.8; margin: 0 4px 12px 4px;">
+          No season prices added yet.
+        </div>
+
+        <ion-card
+          *ngFor="let s of editableRoom.seasonPrices; let i = index"
+          style="margin-bottom: 10px; box-shadow: none;"
+          [style.border]="isOutOfRange(s) ? '1px solid var(--ion-color-danger)' : '1px solid var(--ion-color-step-150)'"
+          [style.background]="isOutOfRange(s) ? 'rgba(var(--ion-color-danger-rgb), 0.06)' : 'transparent'"
+        >
+          <ion-card-content style="padding: 14px;">
+            <ion-row class="ion-align-items-center">
+              <ion-col size="12" sizeMd="8">
+                <div style="font-size: 15px; font-weight: 700;">
+                  {{ s.seasonName }}
+                </div>
+
+                <div style="margin-top: 4px; opacity: 0.9; font-size: 14px;">
+                  {{ s.dateFrom }} - {{ s.dateTo }}
+                </div>
+
+                <div style="margin-top: 4px; font-size: 14px;">
+                  Price per night: <strong>{{ s.pricePerNight }}</strong>
+                </div>
+
+                <div
+                  *ngIf="isOutOfRange(s)"
+                  style="margin-top: 6px; color: var(--ion-color-danger); font-size: 12px;"
+                >
+                  Out of allowed range
+                </div>
+              </ion-col>
+
+              <ion-col size="12" sizeMd="4" class="ion-text-md-end" style="margin-top: 8px;">
+                <ion-button color="danger" fill="clear" size="small" (click)="removeSeason(i)">
+                  Remove
+                </ion-button>
+              </ion-col>
+            </ion-row>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

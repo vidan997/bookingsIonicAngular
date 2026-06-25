@@ -12,7 +12,7 @@
       <ion-menu-toggle>
 
         <ion-item
-          *ngIf="!isLoggedIn()"
+          *ngIf="!isAuthenticated"
           lines="none"
           routerLink="/auth">
           <ion-icon name="log-in" slot="start"></ion-icon>
@@ -20,15 +20,15 @@
         </ion-item>
 
         <ion-item
-          *ngIf="isLoggedIn()"
+          *ngIf="isAuthenticated"
           lines="none"
           routerLink="/places/tabs/discover">
-          <ion-icon name="bussiness" slot="start"></ion-icon>
+          <ion-icon name="business" slot="start"></ion-icon>
           <ion-label>Discover Places</ion-label>
         </ion-item>
 
         <ion-item
-          *ngIf="isLoggedIn()"
+          *ngIf="isAuthenticated"
           lines="none"
           routerLink="/bookings">
           <ion-icon name="checkbox-outline" slot="start"></ion-icon>
@@ -36,7 +36,7 @@
         </ion-item>
 
         <ion-item
-          *ngIf="isLoggedIn()"
+          *ngIf="isAuthenticated"
           lines="none"
           (click)="onLogout()"
           button>
@@ -49,16 +49,16 @@
   </ion-content>
 </ion-menu>
 
-
 <ion-tabs>
   <ion-tab-bar slot="bottom">
     <ion-tab-button tab="discover">
       <ion-label>Discover</ion-label>
       <ion-icon name="search"></ion-icon>
     </ion-tab-button>
-    <ion-tab-button tab="offers" *ngIf="authService.isLoggedIn()">
-       <ion-label>Offers</ion-label>
+
+    <ion-tab-button tab="offers" *ngIf="isAuthenticated">
+      <ion-label>Offers</ion-label>
       <ion-icon name="card"></ion-icon>
     </ion-tab-button>
-   </ion-tab-bar>
+  </ion-tab-bar>
 </ion-tabs>

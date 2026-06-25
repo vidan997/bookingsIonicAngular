@@ -30,8 +30,24 @@
         <ion-item *ngIf="booking.priceAtBooking !== undefined && booking.priceAtBooking !== null">
           <ion-icon name="cash" slot="start"></ion-icon>
           <ion-label>
-            <h3>Price at booking</h3>
-            <p>{{ booking.priceAtBooking | currency }} / Night</p>
+            <h3>Price per night</h3>
+            <p>{{ getPricePerNight() | currency:'RSD ' }}</p>
+          </ion-label>
+        </ion-item>
+        
+        <ion-item *ngIf="booking.bookedFrom && booking.bookedTo">
+          <ion-icon name="moon" slot="start"></ion-icon>
+          <ion-label>
+            <h3>Number of nights</h3>
+            <p>{{ getNights() }}</p>
+          </ion-label>
+        </ion-item>
+        
+        <ion-item *ngIf="booking.priceAtBooking !== undefined && booking.priceAtBooking !== null && booking.bookedFrom && booking.bookedTo">
+          <ion-icon name="card" slot="start"></ion-icon>
+          <ion-label>
+            <h3>Total price</h3>
+            <p>{{ getTotalPrice() | currency:'RSD ' }}</p>
           </ion-label>
         </ion-item>
 

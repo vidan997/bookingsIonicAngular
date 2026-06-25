@@ -9,22 +9,20 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <form (ngSubmit)="onBookPlace()" #f="ngForm">
+<ion-content class="ion-padding booking-shell">
+  <form #f="ngForm">
     <ion-grid>
 
       <ion-row>
-        <ion-col sizeSm="6" offsetSm="3">
-          <ion-item>
+        <ion-col size="12">
+          <ion-item class="booking-item">
             <ion-label position="floating">First Name</ion-label>
             <ion-input type="text" ngModel name="first-name" required></ion-input>
           </ion-item>
         </ion-col>
-      </ion-row>
-
-      <ion-row>
-        <ion-col sizeSm="6" offsetSm="3">
-          <ion-item>
+      
+        <ion-col size="12">
+          <ion-item class="booking-item">
             <ion-label position="floating">Last Name</ion-label>
             <ion-input type="text" ngModel name="last-name" required></ion-input>
           </ion-item>
@@ -32,124 +30,178 @@
       </ion-row>
 
       <ion-row>
-        <ion-col sizeSm="6" offsetSm="3">
-          <ion-item>
-            <ion-label position="stacked">Choose room</ion-label>
-            <ion-select [(ngModel)]="selectedRoomId" name="room-id" required interface="popover">
-              <ion-select-option
-                *ngFor="let room of selectedPlace.rooms"
-                [value]="room.id">
-                {{ room.roomType }} - {{ room.price | currency }} / Night
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-
-      <ion-row *ngIf="getSelectedRoom()">
-        <ion-col sizeSm="6" offsetSm="3">
-          <ion-card>
+        <ion-col size="12" >
+          <ion-card class="section-card room-summary-card">
             <ion-card-content>
-              <p><strong>Selected room:</strong> {{ getSelectedRoom()?.roomType }}</p>
-              <p><strong>Price:</strong> {{ getSelectedRoom()?.price | currency }} / Night</p>
-              <p><strong>Available quantity:</strong> {{ getSelectedRoom()?.quantity }}</p>
+              <div class="room-summary-row">
+                <div>
+                  <div class="room-type-title">{{ selectedRoomType }}</div>
+                </div>
+
+                <div class="room-price-box" *ngIf="getSelectedTypeLowestPrice() !== null">
+                  <div class="small-muted">
+                    {{ getSelectedTypeCurrentPrice() !== null ? 'Current price' : 'From' }}
+                  </div>
+                  <div class="room-price">
+                    {{ getSelectedTypeCurrentPrice() ?? getSelectedTypeLowestPrice() }} RSD
+                  </div>
+                  <div class="small-muted">/ night</div>
+                </div>
+              </div>
             </ion-card-content>
           </ion-card>
         </ion-col>
       </ion-row>
 
       <ion-row>
-        <ion-col sizeSm="6" offsetSm="3">
-          <ion-card>
+        <ion-col size="12">
+          <ion-card class="section-card">
             <ion-card-header>
-              <ion-card-title>Choose dates</ion-card-title>
+              <ion-card-title>Select dates</ion-card-title>
+              <ion-card-subtitle>
+                Click once for check-in, click again for check-out
+              </ion-card-subtitle>
             </ion-card-header>
-
+      
             <ion-card-content>
-
-              <ion-item lines="none">
-                <ion-icon name="calendar" slot="start"></ion-icon>
-                <ion-label>
-                  <h3>From</h3>
-                  <p>{{ bookedFrom | date:'EEE, dd.MM.yyyy' }}</p>
-                </ion-label>
-                <ion-datetime-button datetime="fromDt"></ion-datetime-button>
-              </ion-item>
-
-              <ion-modal [keepContentsMounted]="true">
-                <ng-template>
-                  <ion-datetime
-                    id="fromDt"
-                    presentation="date"
-                    firstDayOfWeek="1"
-                    [showDefaultButtons]="true"
-                    doneText="OK"
-                    cancelText="Cancel"
-                    [min]="minDate"
-                    [max]="maxDate"
-                    [isDateEnabled]="isDateEnabled"
-                    [(ngModel)]="bookedFrom"
-                    name="bookedFrom"
-                    (ionChange)="onFromChanged($event.detail.value)"
-                  ></ion-datetime>
+              <div class="calendar-toolbar">
+                <ion-button fill="clear" size="small" (click)="prevMonth()">
+                  <ion-icon slot="icon-only" name="chevron-back"></ion-icon>
+                </ion-button>
+      
+                <div class="calendar-month-label">
+                  {{ monthLabel }}
+                </div>
+      
+                <ion-button fill="clear" size="small" (click)="nextMonth()">
+                  <ion-icon slot="icon-only" name="chevron-forward"></ion-icon>
+                </ion-button>
+              </div>
+      
+              <div class="weekdays-row">
+                <div class="weekday-cell" *ngFor="let wd of weekDays">
+                  {{ wd }}
+                </div>
+              </div>
+      
+              <div class="calendar-grid">
+                <div
+                  *ngFor="let day of calendarDays"
+                  class="calendar-day"
+                  [ngClass]="{
+                    'outside': !day.inCurrentMonth,
+                    'disabled': day.disabled,
+                    'booked': day.booked,
+                    'range': day.inRange,
+                    'range-start': day.isStart,
+                    'range-end': day.isEnd,
+                    'price-low': day.priceLevel === 'low' && !day.booked && !day.isStart && !day.isEnd && !day.inRange,
+                    'price-mid': day.priceLevel === 'mid' && !day.booked && !day.isStart && !day.isEnd && !day.inRange,
+                    'price-high': day.priceLevel === 'high' && !day.booked && !day.isStart && !day.isEnd && !day.inRange
+                  }"
+                  (click)="onDayClick(day)"
+                >
+                  <ng-container *ngIf="day.date; else emptyCell">
+                    <div class="day-number">
+                      {{ day.dayNumber }}
+                    </div>
+      
+                    <div class="day-price" *ngIf="day.price !== null && day.inCurrentMonth && !day.booked">
+                      {{ day.price }}
+                    </div>
+      
+                    <div class="day-booked-label" *ngIf="day.booked && day.inCurrentMonth">
+                      booked
+                    </div>
+                  </ng-container>
+      
+                  <ng-template #emptyCell></ng-template>
+                </div>
+              </div>
+      
+              <div class="legend-row">
+                <div class="legend-item">
+                  <span class="legend-box low"></span>
+                  Lower price
+                </div>
+                <div class="legend-item">
+                  <span class="legend-box mid"></span>
+                  Mid price
+                </div>
+                <div class="legend-item">
+                  <span class="legend-box high"></span>
+                  Higher price
+                </div>
+                <div class="legend-item">
+                  <span class="legend-box booked"></span>
+                  Unavailable
+                </div>
+                <div class="legend-item">
+                  <span class="legend-box selected"></span>
+                  Selected
+                </div>
+              </div>
+      
+              <div class="selected-dates-grid">
+                <div class="selected-date-box">
+                  <div class="box-label">From</div>
+                  <div class="box-value">
+                    {{ bookedFrom ? (bookedFrom | date:'EEE, dd.MM.yyyy') : '-' }}
+                  </div>
+                </div>
+      
+                <div class="selected-date-box">
+                  <div class="box-label">To</div>
+                  <div class="box-value">
+                    {{ bookedTo ? (bookedTo | date:'EEE, dd.MM.yyyy') : '-' }}
+                  </div>
+                </div>
+              </div>
+      
+              <div style="margin-top: 14px;">
+                <div *ngIf="datesValid(); else invalidDates" class="status-valid">
+                  {{ getNumberOfNights() }} night{{ getNumberOfNights() === 1 ? '' : 's' }}
+                  selected · Estimated total: {{ getEstimatedTotalRsd() }} RSD
+                </div>
+      
+                <ng-template #invalidDates>
+                  <div class="status-invalid">
+                    Select an available range for this room type.
+                  </div>
                 </ng-template>
-              </ion-modal>
-
-              <ion-item lines="none" style="margin-top: 8px;">
-                <ion-icon name="calendar-outline" slot="start"></ion-icon>
-                <ion-label>
-                  <h3>To</h3>
-                  <p>{{ bookedTo | date:'EEE, dd.MM.yyyy' }}</p>
-                </ion-label>
-                <ion-datetime-button datetime="toDt"></ion-datetime-button>
-              </ion-item>
-
-              <ion-modal [keepContentsMounted]="true">
-                <ng-template>
-                  <ion-datetime
-                    id="toDt"
-                    presentation="date"
-                    firstDayOfWeek="1"
-                    [showDefaultButtons]="true"
-                    doneText="OK"
-                    cancelText="Cancel"
-                    [min]="minDate"
-                    [max]="maxDate"
-                    [isDateEnabled]="isDateEnabled"
-                    [(ngModel)]="bookedTo"
-                    name="bookedTo"
-                    (ionChange)="onToChanged($event.detail.value)"
-                  ></ion-datetime>
-                </ng-template>
-              </ion-modal>
-
-              <ion-item lines="none" style="margin-top: 10px;">
-                <ion-icon name="information-circle" slot="start"></ion-icon>
-                <ion-label>
-                  <h3>Status</h3>
-                  <p *ngIf="datesValid(); else invalidDates">Dates available</p>
-                  <ng-template #invalidDates>
-                    <p>Pick a free range. “To” must be after “From”.</p>
-                  </ng-template>
-                </ion-label>
-              </ion-item>
-
+              </div>
             </ion-card-content>
           </ion-card>
         </ion-col>
       </ion-row>
 
       <ion-row>
-        <ion-col sizeSm="6" offsetSm="3">
-          <p class="ion-text-start">{{ selectedPlace.description }}</p>
+        <ion-col size="12" sizeMd="10" offsetMd="1" sizeLg="8" offsetLg="2">
+          <p class="booking-description">
+            {{ selectedPlace.description }}
+          </p>
+
           <ion-button
-            type="submit"
+            type="button"
             color="primary"
             expand="block"
-            [disabled]="!f.valid || !datesValid() || !selectedRoomId"
-          >
-            Book
+            size="large"
+            [disabled]="!f.valid || !datesValid() || isPayPalLoading"
+            (click)="onStartPayment()">
+            Pay & Book
           </ion-button>
+
+          <div *ngIf="isPayPalLoading" class="center-space">
+            <ion-spinner></ion-spinner>
+          </div>
+
+          <div *ngIf="paypalAmountEur" class="center-space">
+            <small>Total: {{ paypalAmountEur | number:'1.2-2' }} €</small>
+          </div>
+
+          <div *ngIf="showPayPal" style="margin-top: 20px;">
+            <div id="paypal-button-container"></div>
+          </div>
         </ion-col>
       </ion-row>
 

@@ -21,7 +21,7 @@ export class BookingsPage implements OnInit, OnDestroy {
     private bookingsService: BookingService,
     private loadingCtrl: LoadingController,
     private modalCtrl: ModalController
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.bookingSub = this.bookingsService.bookings.subscribe(bookings => {
@@ -65,10 +65,17 @@ export class BookingsPage implements OnInit, OnDestroy {
     this.loadingCtrl.create({ message: 'Canceling...' }).then(loadingEl => {
       loadingEl.present();
 
-      if (slidingItem) slidingItem.close();
+      if (slidingItem) {
+        slidingItem.close();
+      }
 
       this.bookingsService.cancelBooking(String(bookingId)).subscribe({
-        next: () => loadingEl.dismiss(),
+        next: () => {
+          this.loadedBookings = this.loadedBookings.filter(
+            booking => String(booking.id) !== String(bookingId)
+          );
+          loadingEl.dismiss();
+        },
         error: (err) => {
           console.log('cancelBooking error', err);
           loadingEl.dismiss();

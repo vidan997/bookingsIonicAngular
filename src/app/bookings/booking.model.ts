@@ -2,7 +2,7 @@ export class Booking {
   constructor(
     public id: string,
     public placeId: string,
-    public roomid: number,
+    public roomId: number,
     public userId: string,
     public placeTitle: string,
     public placeImage: string,
@@ -12,7 +12,8 @@ export class Booking {
     public bookedTo: Date,
     public roomType: string,
     public priceAtBooking: number,
-    public ownerPhone?: string
-  ) {}
+    public ownerPhone?: string,
+    public paypalOrderId?: string,
+    public paypalCaptureId?: string
+  ) { }
 }
-  

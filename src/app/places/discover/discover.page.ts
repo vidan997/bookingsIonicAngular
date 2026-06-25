@@ -25,7 +25,7 @@ export class DiscoverPage implements OnInit, OnDestroy {
     private placesService: PlacesService,
     private authService: AuthService,
     private router: Router
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.placesSub = this.placesService.places.subscribe(places => {
@@ -94,15 +94,52 @@ export class DiscoverPage implements OnInit, OnDestroy {
     });
   }
 
-  getLowestRoomPrice(place: Place): number {
-    return Math.min(...place.rooms.map(room => Number(room.price || 0)));
-  }
-
   getRoomTypesText(place: Place): string {
     if (!place.rooms || place.rooms.length === 0) {
       return '';
     }
 
-    return place.rooms.map(room => room.roomType).filter(Boolean).join(', ');
+    const uniqueTypes = [...new Set(
+      place.rooms
+        .map(room => room.roomType)
+        .filter(type => !!type)
+    )];
+
+    return uniqueTypes.join(', ');
+  }
+
+  getRoomNamesText(place: Place): string {
+    if (!place.rooms || place.rooms.length === 0) {
+      return '';
+    }
+
+    return place.rooms
+      .map(room => room.name)
+      .filter(name => !!name)
+      .join(', ');
+  }
+
+  getRoomsCount(place: Place): number {
+    return place.rooms ? place.rooms.length : 0;
+  }
+
+  getMinCapacity(place: Place): number | null {
+    if (!place.rooms || place.rooms.length === 0) {
+      return null;
+    }
+
+    return Math.min(...place.rooms.map(room => Number(room.capacity || 0)));
+  }
+
+  getMaxCapacity(place: Place): number | null {
+    if (!place.rooms || place.rooms.length === 0) {
+      return null;
+    }
+
+    return Math.max(...place.rooms.map(room => Number(room.capacity || 0)));
+  }
+
+  onOpenPlace(placeId: string) {
+    this.router.navigate(['/places/tabs/discover', placeId]);
   }
 }

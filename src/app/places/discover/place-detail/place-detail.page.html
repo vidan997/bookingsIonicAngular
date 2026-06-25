@@ -9,20 +9,21 @@
 
 <ion-content [fullscreen]="true">
 
-  <div class="ion-text-center" *ngIf="isLoading">
+  <div class="ion-text-center" *ngIf="isLoading" style="padding-top: 40px;">
     <ion-spinner color="primary"></ion-spinner>
   </div>
 
   <ion-grid *ngIf="!isLoading && place">
 
     <ion-row>
-      <ion-col sizeSm="8" offsetSm="2">
+      <ion-col size="12" sizeMd="10" offsetMd="1" sizeLg="8" offsetLg="2">
         <ion-card>
           <div style="
               position: relative;
               height: 360px;
               overflow: hidden;
               background: #000;
+              border-radius: 16px 16px 0 0;
             ">
             <img [src]="getImageUrl(selectedImageUrl)" style="
                 position: absolute;
@@ -35,13 +36,13 @@
                 transform: scale(1.1);
                 opacity: 0.6;
               " />
+
             <img [src]="getImageUrl(selectedImageUrl)" style="
                 position: relative;
                 z-index: 2;
-                max-width: 100%;
-                max-height: 100%;
+                width: 100%;
+                height: 100%;
                 object-fit: contain;
-                margin: auto;
                 display: block;
               " />
           </div>
@@ -52,14 +53,18 @@
               overflow-x: auto;
               padding: 12px;
             ">
-            <div *ngFor="let img of place.imageUrls; let i = index" (click)="selectImage(i)" style="
-                min-width: 80px;
-                height: 80px;
-                border-radius: 10px;
+            <div
+              *ngFor="let img of place.imageUrls; let i = index"
+              (click)="selectImage(i)"
+              style="
+                min-width: 88px;
+                height: 88px;
+                border-radius: 12px;
                 overflow: hidden;
                 cursor: pointer;
-                position: relative;
-              " [style.outline]="i === selectedIndex
+                flex-shrink: 0;
+              "
+              [style.outline]="i === selectedIndex
                 ? '2px solid var(--ion-color-primary)'
                 : '2px solid transparent'">
 
@@ -75,47 +80,106 @@
     </ion-row>
 
     <ion-row>
-      <ion-col sizeSm="8" offsetSm="2">
+      <ion-col size="12" sizeMd="10" offsetMd="1" sizeLg="8" offsetLg="2">
         <ion-card>
           <ion-card-header>
-            <ion-card-title>{{ place.title }}</ion-card-title>
-            <ion-card-subtitle *ngIf="place.rooms && place.rooms.length > 0">
-              From {{ getLowestRoomPrice() | currency }} / Night
+            <ion-card-title style="font-size: 26px; font-weight: 700;">
+              {{ place.title }}
+            </ion-card-title>
+
+            <ion-card-subtitle *ngIf="getCurrentRoomPrice() !== null" style="margin-top: 6px;">
+              Current price: {{ getCurrentRoomPrice() }} RSD / Night
+            </ion-card-subtitle>
+            
+            <ion-card-subtitle *ngIf="getCurrentRoomPrice() === null && getLowestRoomPrice() !== null" style="margin-top: 6px;">
+              From {{ getLowestRoomPrice() }} RSD / Night
             </ion-card-subtitle>
           </ion-card-header>
 
           <ion-card-content>
-            <p style="line-height:1.6">{{ place.description }}</p>
+            <p style="line-height: 1.7; font-size: 15px; margin-bottom: 12px;">
+              {{ place.description }}
+            </p>
+
+            <div *ngIf="getRoomTypesText()" style="
+              font-size: 14px;
+              opacity: 0.8;
+            ">
+              Room types: {{ getRoomTypesText() }}
+            </div>
           </ion-card-content>
         </ion-card>
       </ion-col>
     </ion-row>
 
     <ion-row *ngIf="place.rooms && place.rooms.length > 0">
-      <ion-col sizeSm="8" offsetSm="2">
+      <ion-col size="12" sizeMd="10" offsetMd="1" sizeLg="8" offsetLg="2">
         <ion-card>
           <ion-card-header>
-            <ion-card-title>Rooms</ion-card-title>
+            <ion-card-title>Available room types</ion-card-title>
+            <ion-card-subtitle *ngIf="!isLoggedIn()">
+              Log in to book this place
+            </ion-card-subtitle>
           </ion-card-header>
-
-          <ion-list>
-            <ion-item *ngFor="let room of place.rooms">
-              <ion-label>
-                <h2>{{ room.roomType }}</h2>
-                <p>Price: {{ room.price | currency }} / Night</p>
-                <p>Available quantity: {{ room.quantity }}</p>
-              </ion-label>
-            </ion-item>
-          </ion-list>
+    
+          <ion-card-content>
+            <div
+              *ngFor="let roomType of getUniqueRoomTypes()"
+              (click)="isLoggedIn() && isBookable ? onSelectRoomType(roomType) : null"
+              [style.border]="isLoggedIn() && isBookable
+                ? '1px solid rgba(255,255,255,0.08)'
+                : '1px solid rgba(255,255,255,0.05)'"
+              [style.border-radius]="'16px'"
+              [style.padding]="'16px'"
+              [style.margin-bottom]="'12px'"
+              [style.background]="isLoggedIn() && isBookable
+                ? 'rgba(255,255,255,0.02)'
+                : 'rgba(255,255,255,0.01)'"
+              [style.cursor]="isLoggedIn() && isBookable ? 'pointer' : 'default'"
+              [style.opacity]="isLoggedIn() && isBookable ? '1' : '0.65'"
+            >
+              <div style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+              ">
+                <div style="
+                  font-size: 18px;
+                  font-weight: 700;
+                ">
+                  {{ roomType }}
+                </div>
+    
+                <div style="text-align: right;">
+                  <div style="
+                    font-size: 13px;
+                    opacity: 0.7;
+                    margin-bottom: 4px;
+                  ">
+                    {{ getCurrentPriceForRoomType(roomType) !== null ? 'Current price' : 'From' }}
+                  </div>
+    
+                  <div style="
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: var(--ion-color-primary);
+                  ">
+                    {{ getCurrentPriceForRoomType(roomType) ?? getLowestPriceForRoomType(roomType) }} RSD
+                  </div>
+    
+                  <div style="
+                    font-size: 13px;
+                    opacity: 0.75;
+                    margin-top: 2px;
+                  ">
+                    / night
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ion-card-content>
         </ion-card>
-      </ion-col>
-    </ion-row>
-
-    <ion-row *ngIf="isBookable && isLoggedIn()">
-      <ion-col sizeSm="8" offsetSm="2">
-        <ion-button expand="block" color="primary" size="large" (click)="onBookPlace()">
-          Book this place
-        </ion-button>
       </ion-col>
     </ion-row>
 

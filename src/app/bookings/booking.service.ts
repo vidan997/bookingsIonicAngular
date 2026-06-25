@@ -20,6 +20,25 @@ interface BookingData {
   ownerPhone?: string;
 }
 
+export interface CreatePayPalOrderRequest {
+  placeId: number;
+  roomId: number;
+  userId: string;
+  bookedFrom: Date;
+  bookedTo: Date;
+}
+
+export interface CreatePayPalOrderResponse {
+  orderId: string;
+  amountEur: number;
+}
+
+export interface CapturePayPalOrderRequest {
+  paypalOrderId: string;
+  firstName: string;
+  lastName: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -30,30 +49,31 @@ export class BookingService {
   constructor(
     private authService: AuthService,
     private http: HttpClient
-  ) {}
+  ) { }
 
   get bookings() {
     return this._bookings.asObservable();
   }
 
-  private mapToBooking(b: BookingData): Booking {
+  private mapToBooking(bookingData: any): Booking {
     return new Booking(
-      String(b.id),
-      String(b.placeId),
-      Number(b.roomid),
-      b.userid,
-      b.placeTitle,
-      b.placeImage,
-      b.firstName,
-      b.lastName,
-      new Date(b.bookedFrom),
-      new Date(b.bookedTo),
-      b.roomType,
-      Number(b.priceAtBooking),
-      b.ownerPhone
+      bookingData.id,
+      bookingData.placeId,
+      bookingData.roomid ?? bookingData.roomId,
+      bookingData.userid ?? bookingData.userId,
+      bookingData.placeTitle,
+      bookingData.placeImage,
+      bookingData.firstName,
+      bookingData.lastName,
+      new Date(bookingData.bookedFrom),
+      new Date(bookingData.bookedTo),
+      bookingData.roomType,
+      bookingData.priceAtBooking,
+      bookingData.ownerPhone,
+      bookingData.paypalOrderId,
+      bookingData.paypalCaptureId
     );
   }
-
   private authHeaders(token: string) {
     return { Authorization: 'Bearer ' + token };
   }
@@ -150,10 +170,11 @@ export class BookingService {
           { headers: this.authHeaders(token) }
         );
       }),
-      switchMap(() => this.bookings),
-      take(1),
+      switchMap(() => this.bookings.pipe(take(1))),
       tap(bookings => {
-        this._bookings.next(bookings.filter(b => b.id !== bookingId));
+        this._bookings.next(
+          bookings.filter(b => String(b.id) !== String(bookingId))
+        );
       })
     );
   }
@@ -171,4 +192,63 @@ export class BookingService {
       map(list => list.map(x => this.mapToBooking(x)))
     );
   }
+
+  createPayPalOrder(
+    placeId: number,
+    roomId: number,
+    bookedFrom: Date,
+    bookedTo: Date
+  ) {
+    return this.authService.userId.pipe(
+      take(1),
+      switchMap(userId => {
+        if (userId === null || userId === undefined) {
+          throw new Error('No user id found!');
+        }
+
+        return this.authService.userToken.pipe(
+          take(1),
+          switchMap(token => {
+            if (!token) throw new Error('No token found!');
+
+            const body: CreatePayPalOrderRequest = {
+              placeId,
+              roomId,
+              userId: String(userId),
+              bookedFrom,
+              bookedTo
+            };
+
+            return this.http.post<CreatePayPalOrderResponse>(
+              `${this.baseUrl}/paypal/create-order`,
+              body,
+              { headers: this.authHeaders(token) }
+            );
+          })
+        );
+      })
+    );
+  }
+
+  capturePayPalOrder(paypalOrderId: string, firstName: string, lastName: string) {
+    return this.authService.userToken.pipe(
+      take(1),
+      switchMap(token => {
+        if (!token) throw new Error('No token found!');
+
+        const body: CapturePayPalOrderRequest = {
+          paypalOrderId,
+          firstName,
+          lastName
+        };
+
+        return this.http.post<any>(
+          `${this.baseUrl}/paypal/capture-order`,
+          body,
+          { headers: this.authHeaders(token) }
+        );
+      })
+    );
+  }
+
 }
